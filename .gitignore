@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+artifacts/
+feishu-doc-auth.png
+*.log
+*.tsbuildinfo
+.DS_Store

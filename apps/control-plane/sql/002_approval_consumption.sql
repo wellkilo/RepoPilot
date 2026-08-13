@@ -1,0 +1,2 @@
+ALTER TABLE approvals
+ADD COLUMN IF NOT EXISTS consumed_at TIMESTAMPTZ;

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: repopilot
+          POSTGRES_PASSWORD: repopilot
+          POSTGRES_USER: repopilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U repopilot -d repopilot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://repopilot:repopilot@127.0.0.1:5432/repopilot
+      TEST_DATABASE_URL: postgres://repopilot:repopilot@127.0.0.1:5432/repopilot
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --registry=https://registry.npmjs.org
+      - name: Initialize database
+        run: |
+          for migration in apps/control-plane/sql/*.sql; do
+            PGPASSWORD=repopilot psql \
+              --host 127.0.0.1 \
+              --username repopilot \
+              --dbname repopilot \
+              --set ON_ERROR_STOP=1 \
+              --file "$migration"
+          done
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm build
