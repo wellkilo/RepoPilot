@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "test": "pnpm -r test",
+    "test": "pnpm --filter @repopilot/contracts build && pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

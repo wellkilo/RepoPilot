@@ -260,24 +260,26 @@ export async function buildApp(dependencies: AppDependencies): Promise<FastifyIn
       })
   );
 
-  const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-  const consoleRoot = path.resolve(currentDirectory, "../../console/dist");
-  await app.register(fastifyStatic, {
-    root: path.join(consoleRoot, "assets"),
-    prefix: "/assets/",
-    wildcard: true
-  });
-  const sendConsoleIndex = async (reply: FastifyReply) => {
-    const index = await readFile(path.join(consoleRoot, "index.html"), "utf8");
-    return reply.type("text/html; charset=utf-8").send(index);
-  };
-  app.get("/", async (_request, reply) => sendConsoleIndex(reply));
-  app.get("/*", async (request, reply) => {
-    if (request.url.startsWith("/api/") || request.url === "/mcp") {
-      return reply.code(404).send({ error: "not_found" });
-    }
-    return sendConsoleIndex(reply);
-  });
+  if (config.nodeEnv !== "test") {
+    const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+    const consoleRoot = path.resolve(currentDirectory, "../../console/dist");
+    await app.register(fastifyStatic, {
+      root: path.join(consoleRoot, "assets"),
+      prefix: "/assets/",
+      wildcard: true
+    });
+    const sendConsoleIndex = async (reply: FastifyReply) => {
+      const index = await readFile(path.join(consoleRoot, "index.html"), "utf8");
+      return reply.type("text/html; charset=utf-8").send(index);
+    };
+    app.get("/", async (_request, reply) => sendConsoleIndex(reply));
+    app.get("/*", async (request, reply) => {
+      if (request.url.startsWith("/api/") || request.url === "/mcp") {
+        return reply.code(404).send({ error: "not_found" });
+      }
+      return sendConsoleIndex(reply);
+    });
+  }
 
   return app;
 }
