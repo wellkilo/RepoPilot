@@ -7,6 +7,9 @@
     并完整保留决策、工具、审批、回滚点与经验证据。
   </p>
   <p>
+    <a href="https://wellkilo.github.io/RepoPilot/">
+      <img alt="Project Site" src="https://img.shields.io/badge/project_site-live-49d6d0?style=flat-square" />
+    </a>
     <a href="https://github.com/wellkilo/RepoPilot/actions/workflows/ci.yml">
       <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/wellkilo/RepoPilot/ci.yml?branch=main&label=CI&style=flat-square" />
     </a>
@@ -20,6 +23,7 @@
     <img alt="Safety Policy" src="https://img.shields.io/badge/policy-PR--only-f59f00?style=flat-square" />
   </p>
   <p>
+    <a href="https://wellkilo.github.io/RepoPilot/">项目网站</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="docs/architecture.md">架构</a> ·
     <a href="API.md">API / MCP</a> ·

@@ -1,0 +1,16 @@
+{
+  "name": "RepoPilot",
+  "short_name": "RepoPilot",
+  "description": "可审计仓库自治维护 AgentTeam",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#071019",
+  "theme_color": "#071019",
+  "icons": [
+    {
+      "src": "./assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

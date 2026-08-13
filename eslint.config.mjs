@@ -12,10 +12,32 @@ export default tseslint.config(
       "eslint.config.mjs"
     ]
   },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  {
+    ...eslint.configs.recommended,
+    files: ["**/*.{js,mjs,cjs}"]
+  },
+  {
+    files: ["docs/app.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: {
+        document: "readonly",
+        window: "readonly",
+        navigator: "readonly",
+        fetch: "readonly",
+        IntersectionObserver: "readonly",
+        setTimeout: "readonly"
+      }
+    }
+  },
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ["**/*.{ts,tsx,mts,cts}"]
+  })),
   prettier,
   {
+    files: ["**/*.{ts,tsx,mts,cts}"],
     languageOptions: {
       parserOptions: {
         projectService: true,

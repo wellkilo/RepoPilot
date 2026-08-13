@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wellkilo.github.io/RepoPilot/sitemap.xml

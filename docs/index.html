@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam，将 GitHub Issue 与失败 CI 安全推进到经过独立验证的 Pull Request。"
+    />
+    <meta
+      name="keywords"
+      content="RepoPilot, AgentTeams, Agent Infra, MCP, GitHub automation, multi-agent, OpenTelemetry"
+    />
+    <meta name="theme-color" content="#071019" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="RepoPilot · 可审计仓库自治维护 AgentTeam" />
+    <meta property="og:description" content="从 Issue 到 Verified PR，不跳过任何证据。" />
+    <meta property="og:url" content="https://wellkilo.github.io/RepoPilot/" />
+    <meta
+      property="og:image"
+      content="https://wellkilo.github.io/RepoPilot/assets/social-card.svg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://wellkilo.github.io/RepoPilot/" />
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>RepoPilot · 可审计仓库自治维护 AgentTeam</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header class="site-header" data-header>
+      <a class="brand" href="#top" aria-label="RepoPilot 首页">
+        <span class="brand-mark" aria-hidden="true">RP</span>
+        <span class="brand-copy">
+          <strong>RepoPilot</strong>
+          <small>Evidence-first AgentTeam</small>
+        </span>
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+        data-nav-toggle
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+        <span class="sr-only">打开导航</span>
+      </button>
+
+      <nav class="primary-nav" id="primary-navigation" data-nav>
+        <a href="#loop">维护闭环</a>
+        <a href="#team">AgentTeam</a>
+        <a href="#architecture">架构</a>
+        <a href="#safety">安全</a>
+        <a href="#proof">验证证据</a>
+        <a
+          class="nav-cta"
+          href="https://github.com/wellkilo/RepoPilot"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+          <span aria-hidden="true">↗</span>
+        </a>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section class="hero" id="top">
+        <div class="hero-grid section-shell">
+          <div class="hero-copy reveal">
+            <div class="eyebrow">
+              <span class="live-dot" aria-hidden="true"></span>
+              AgentTeams v1.2.2 · Agent Infra
+            </div>
+            <h1>
+              从 Issue 到
+              <span>Verified PR</span>
+              <br />
+              不跳过任何证据
+            </h1>
+            <p class="hero-lead">
+              RepoPilot 让五个不同职能的 Agent 在
+              <strong>可审批、可回放、可回滚</strong>
+              的边界内协作，把 GitHub 问题安全推进到经过独立验证的 Pull Request。
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#loop">
+                查看 8 阶段闭环
+                <span aria-hidden="true">↓</span>
+              </a>
+              <a
+                class="button button-secondary"
+                href="https://github.com/wellkilo/RepoPilot"
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看源代码
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <dl class="hero-metrics" aria-label="项目核心指标">
+              <div>
+                <dt>5</dt>
+                <dd>职能 Agent</dd>
+              </div>
+              <div>
+                <dt>8</dt>
+                <dd>MCP Tools</dd>
+              </div>
+              <div>
+                <dt>100%</dt>
+                <dd>关键动作留痕</dd>
+              </div>
+              <div>
+                <dt>0</dt>
+                <dd>未审批自动合并</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="flight-recorder reveal" data-delay="140">
+            <div class="recorder-head">
+              <div>
+                <span>LIVE RUN</span>
+                <strong>REPOPILOT-001</strong>
+              </div>
+              <div class="recorder-status">
+                <span></span>
+                Evidence chain healthy
+              </div>
+            </div>
+
+            <div class="trace-rail" aria-label="交互式证据链">
+              <button
+                class="trace-node is-active"
+                type="button"
+                data-trace-node="input"
+                aria-pressed="true"
+              >
+                <span>01</span>
+                <strong>Issue</strong>
+                <small>任务输入</small>
+              </button>
+              <button
+                class="trace-node"
+                type="button"
+                data-trace-node="decision"
+                aria-pressed="false"
+              >
+                <span>02</span>
+                <strong>Decision</strong>
+                <small>根因判断</small>
+              </button>
+              <button class="trace-node" type="button" data-trace-node="tool" aria-pressed="false">
+                <span>03</span>
+                <strong>MCP</strong>
+                <small>工具结果</small>
+              </button>
+              <button
+                class="trace-node"
+                type="button"
+                data-trace-node="approval"
+                aria-pressed="false"
+              >
+                <span>04</span>
+                <strong>Approval</strong>
+                <small>人工门禁</small>
+              </button>
+              <button
+                class="trace-node"
+                type="button"
+                data-trace-node="verified"
+                aria-pressed="false"
+              >
+                <span>05</span>
+                <strong>Verified</strong>
+                <small>CI 证据</small>
+              </button>
+            </div>
+
+            <div class="trace-detail" data-trace-detail aria-live="polite">
+              <div class="trace-detail-meta">
+                <span data-trace-type>INPUT</span>
+                <time data-trace-time>10:15:02.184</time>
+              </div>
+              <h2 data-trace-title>GitHub Issue #1 已进入维护队列</h2>
+              <p data-trace-copy>
+                Webhook HMAC 验签通过；delivery ID 已登记。执行策略锁定为
+                <code>pull_request_only</code>。
+              </p>
+              <div class="hash-row">
+                <span>PREV <code data-trace-prev>GENESIS</code></span>
+                <span>CHAIN <code data-trace-hash>4f8ab21e…9c12</code></span>
+              </div>
+            </div>
+
+            <div class="recorder-foot">
+              <span>TRACE 3cad22c237f6</span>
+              <span>CHAIN VERIFIED</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="problem-section section-shell reveal" aria-labelledby="problem-title">
+        <div class="section-index">00 / WHY</div>
+        <div class="problem-layout">
+          <div>
+            <p class="section-kicker">Repository maintenance is a systems problem</p>
+            <h2 id="problem-title">问题不是“能不能生成代码”</h2>
+          </div>
+          <p>
+            真正困难的是：问题信息分散、根因依赖专家、修复者自行验证，以及自动化执行缺少权限边界。
+            RepoPilot 把这些风险拆成可独立检查的协作单元。
+          </p>
+        </div>
+
+        <div class="problem-ledger">
+          <article>
+            <span>01</span>
+            <h3>输入碎片化</h3>
+            <p>Issue、CI 日志和用户反馈分散，重复问题难以识别。</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>诊断依赖专家</h3>
+            <p>调用链与历史经验难复用，定位耗时不可预测。</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>修复验证耦合</h3>
+            <p>修复者自行验证，容易只证明“改后能跑”。</p>
+          </article>
+          <article class="is-risk">
+            <span>04</span>
+            <h3>自治缺少边界</h3>
+            <p>直接合并、删分支或改密钥，会把效率问题变成安全问题。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="loop-section" id="loop" aria-labelledby="loop-title">
+        <div class="section-shell">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-index">01 / CLOSED LOOP</div>
+              <p class="section-kicker">Eight stages, one accountable run</p>
+              <h2 id="loop-title">八阶段闭环，每一步都能回放</h2>
+            </div>
+            <p>
+              点击任一阶段查看输入、输出与失败分支。状态由工具持有，Agent 不依赖对话记忆猜测进度。
+            </p>
+          </div>
+
+          <div class="loop-workbench reveal" data-delay="100">
+            <div class="loop-tabs" role="tablist" aria-label="维护闭环阶段">
+              <button role="tab" aria-selected="true" aria-controls="loop-panel" data-loop-step="0">
+                <span>01</span>
+                任务输入
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="1"
+              >
+                <span>02</span>
+                任务拆解
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="2"
+              >
+                <span>03</span>
+                上下文
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="3"
+              >
+                <span>04</span>
+                工具调用
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="4"
+              >
+                <span>05</span>
+                结果验证
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="5"
+              >
+                <span>06</span>
+                证据沉淀
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="6"
+              >
+                <span>07</span>
+                审批回滚
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                aria-controls="loop-panel"
+                data-loop-step="7"
+              >
+                <span>08</span>
+                经验沉淀
+              </button>
+            </div>
+
+            <div class="loop-panel" id="loop-panel" role="tabpanel" aria-live="polite">
+              <div class="loop-panel-index" data-loop-index>01</div>
+              <div>
+                <span class="loop-owner" data-loop-owner>CONTROL PLANE</span>
+                <h3 data-loop-title>任务输入</h3>
+                <p data-loop-copy>
+                  接收 GitHub Issue 或失败 Workflow Run。原始请求经过 HMAC-SHA256 验签，仓库必须命中
+                  allowlist。
+                </p>
+              </div>
+              <dl>
+                <div>
+                  <dt>INPUT</dt>
+                  <dd data-loop-input>Issue / Failed CI / Policy</dd>
+                </div>
+                <div>
+                  <dt>OUTPUT</dt>
+                  <dd data-loop-output>Run ID + immutable source context</dd>
+                </div>
+                <div>
+                  <dt>FAILURE</dt>
+                  <dd data-loop-failure>签名错误或仓库越界时立即拒绝</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="team-section section-shell" id="team" aria-labelledby="team-title">
+        <div class="section-heading reveal">
+          <div>
+            <div class="section-index">02 / AGENT IDENTITY</div>
+            <p class="section-kicker">Separation of duties by design</p>
+            <h2 id="team-title">五个 Agent，不是五份相似提示词</h2>
+          </div>
+          <p>
+            每个角色都有清晰的输入、输出、依赖、决策边界与 Trace。角色分离直接写入 AgentTeams Worker
+            Identity 和 Skill。
+          </p>
+        </div>
+
+        <div class="agent-lanes">
+          <article class="agent-card reveal">
+            <div class="agent-monogram">L</div>
+            <div class="agent-order">01</div>
+            <h3>Repo Lead</h3>
+            <p>分诊、风险判断、DAG 拆解与任务委派。</p>
+            <dl>
+              <div>
+                <dt>CAN</dt>
+                <dd>规划与协调</dd>
+              </div>
+              <div>
+                <dt>CANNOT</dt>
+                <dd>修改源代码</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="agent-card reveal" data-delay="60">
+            <div class="agent-monogram">X</div>
+            <div class="agent-order">02</div>
+            <h3>Locator</h3>
+            <p>复现、代码检索、根因证明与影响面分析。</p>
+            <dl>
+              <div>
+                <dt>CAN</dt>
+                <dd>只读实验</dd>
+              </div>
+              <div>
+                <dt>CANNOT</dt>
+                <dd>提交或推送</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="agent-card reveal" data-delay="120">
+            <div class="agent-monogram">F</div>
+            <div class="agent-order">03</div>
+            <h3>Fixer</h3>
+            <p>最小补丁、回归测试、分支、提交与 PR。</p>
+            <dl>
+              <div>
+                <dt>CAN</dt>
+                <dd>创建 Pull Request</dd>
+              </div>
+              <div>
+                <dt>CANNOT</dt>
+                <dd>Merge / Force Push</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="agent-card reveal" data-delay="180">
+            <div class="agent-monogram">V</div>
+            <div class="agent-order">04</div>
+            <h3>Verifier</h3>
+            <p>独立执行 before/after、测试、lint 与 CI 检查。</p>
+            <dl>
+              <div>
+                <dt>CAN</dt>
+                <dd>签发验证结论</dd>
+              </div>
+              <div>
+                <dt>CANNOT</dt>
+                <dd>修改补丁</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="agent-card reveal" data-delay="240">
+            <div class="agent-monogram">A</div>
+            <div class="agent-order">05</div>
+            <h3>Archivist</h3>
+            <p>查重、脱敏并沉淀经过验证的 Runbook。</p>
+            <dl>
+              <div>
+                <dt>CAN</dt>
+                <dd>保存已验证经验</dd>
+              </div>
+              <div>
+                <dt>CANNOT</dt>
+                <dd>把猜测写成事实</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section class="architecture-section" id="architecture" aria-labelledby="architecture-title">
+        <div class="section-shell">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-index">03 / ARCHITECTURE</div>
+              <p class="section-kicker">Judgment, capability, connection, evidence</p>
+              <h2 id="architecture-title">四层解耦，替换工具不重写协同</h2>
+            </div>
+            <p>Agent 做判断，Skill 固化稳定能力，MCP 连接真实系统，证据层负责治理、检索与回放。</p>
+          </div>
+
+          <div class="architecture-stack reveal" data-delay="100">
+            <article>
+              <span>01</span>
+              <div>
+                <h3>AgentTeams 编排层</h3>
+                <p>Manager · Team Leader · Matrix Room · Project / Task State</p>
+              </div>
+              <strong>ORCHESTRATE</strong>
+            </article>
+            <article>
+              <span>02</span>
+              <div>
+                <h3>多 Agent 协同层</h3>
+                <p>Repo Lead · Locator · Fixer · Verifier · Archivist</p>
+              </div>
+              <strong>COLLABORATE</strong>
+            </article>
+            <article>
+              <span>03</span>
+              <div>
+                <h3>Skill / MCP 能力层</h3>
+                <p>5 Custom Skills · 8 MCP Tools · GitHub REST · AgentLoop Recall</p>
+              </div>
+              <strong>EXECUTE</strong>
+            </article>
+            <article>
+              <span>04</span>
+              <div>
+                <h3>证据与治理层</h3>
+                <p>PostgreSQL / pgvector · SHA-256 Evidence · OpenTelemetry · Approval</p>
+              </div>
+              <strong>GOVERN</strong>
+            </article>
+          </div>
+
+          <div class="architecture-tags reveal">
+            <span>上下文共享</span>
+            <span>结构化状态</span>
+            <span>审批回滚</span>
+            <span>轨迹可观测</span>
+            <span>经验复用</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="skills-section section-shell" aria-labelledby="skills-title">
+        <div class="section-heading reveal">
+          <div>
+            <div class="section-index">04 / SKILL & MCP</div>
+            <p class="section-kicker">Reusable contracts, not one-off prompts</p>
+            <h2 id="skills-title">把维护经验做成可复用能力</h2>
+          </div>
+          <p>
+            五个 Apache-2.0 Skill 覆盖完整维护链路；八个强类型 MCP Tool 连接真实
+            GitHub、审批、证据与知识服务。
+          </p>
+        </div>
+
+        <div class="skills-grid">
+          <div class="skill-ledger reveal">
+            <article>
+              <span>01</span>
+              <code>repository-triage</code>
+              <p>分诊 · 去重 · 风险 · DAG</p>
+            </article>
+            <article>
+              <span>02</span>
+              <code>root-cause-localization</code>
+              <p>复现 · 定位 · 影响面</p>
+            </article>
+            <article>
+              <span>03</span>
+              <code>safe-patch-authoring</code>
+              <p>最小补丁 · 回归测试 · PR</p>
+            </article>
+            <article>
+              <span>04</span>
+              <code>verification-gate</code>
+              <p>before / after · CI · Verdict</p>
+            </article>
+            <article>
+              <span>05</span>
+              <code>runbook-archival</code>
+              <p>查重 · 脱敏 · 经验沉淀</p>
+            </article>
+          </div>
+
+          <div class="mcp-orbit reveal" data-delay="120">
+            <div class="orbit-core">
+              <strong>MCP</strong>
+              <small>Streamable HTTP</small>
+            </div>
+            <span class="orbit-item orbit-item-1">Evidence</span>
+            <span class="orbit-item orbit-item-2">Approval</span>
+            <span class="orbit-item orbit-item-3">Runbook</span>
+            <span class="orbit-item orbit-item-4">Issue</span>
+            <span class="orbit-item orbit-item-5">Pull Request</span>
+            <span class="orbit-item orbit-item-6">Checks</span>
+            <div class="orbit-caption">
+              <span>8 tools</span>
+              <span>typed schema</span>
+              <span>repository allowlist</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="safety-section" id="safety" aria-labelledby="safety-title">
+        <div class="section-shell">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-index">05 / SAFETY</div>
+              <p class="section-kicker">Autonomy stops at the pull request</p>
+              <h2 id="safety-title">安全边界是执行链的一部分</h2>
+            </div>
+            <p>
+              RepoPilot 默认只到 Pull
+              Request。合并等高风险动作必须携带已批准、版本固定且未消费的审批。
+            </p>
+          </div>
+
+          <div class="safety-gates reveal" data-delay="100">
+            <article class="allow-gate">
+              <header>
+                <span>DEFAULT ALLOW</span>
+                <strong>低风险自动执行</strong>
+              </header>
+              <ul>
+                <li>读取 Issue / Workflow Run</li>
+                <li>创建非保护分支与提交</li>
+                <li>推送最小补丁</li>
+                <li>创建 Pull Request</li>
+                <li>读取 Checks 并写入 Evidence</li>
+              </ul>
+            </article>
+
+            <div class="gate-control" aria-hidden="true">
+              <span>POLICY</span>
+              <strong>PR ONLY</strong>
+              <i></i>
+              <small>Human checkpoint</small>
+            </div>
+
+            <article class="approval-gate">
+              <header>
+                <span>APPROVAL REQUIRED</span>
+                <strong>高风险人工确认</strong>
+              </header>
+              <ul>
+                <li>合并 Pull Request</li>
+                <li>删除分支</li>
+                <li>破坏性回滚</li>
+                <li>修改权限或密钥</li>
+                <li>执行其他高风险工具</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="safety-controls reveal">
+            <span>HMAC-SHA256</span>
+            <span>Repository Allowlist</span>
+            <span>Delivery Advisory Lock</span>
+            <span>Versioned Approval</span>
+            <span>One-time Consumption</span>
+            <span>Rollback Reference</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="proof-section section-shell" id="proof" aria-labelledby="proof-title">
+        <div class="section-heading reveal">
+          <div>
+            <div class="section-index">06 / PROOF</div>
+            <p class="section-kicker">A deterministic failure, not a staged screenshot</p>
+            <h2 id="proof-title">真实 Issue 与失败 CI 构成可复现测试床</h2>
+          </div>
+          <p>
+            合法的 <code>score = 0</code> 被
+            <code>|| 1</code> 错误回退。类型检查通过，只有目标回归用例失败。
+          </p>
+        </div>
+
+        <div class="proof-layout">
+          <article class="issue-window reveal">
+            <div class="window-bar">
+              <span></span><span></span><span></span>
+              <strong>wellkilo/repopilot-testbed · Issue #1</strong>
+            </div>
+            <div class="window-body">
+              <div class="issue-state">OPEN</div>
+              <h3>Zero evaluation scores are normalized to one</h3>
+              <p>
+                <code>normalizeEvaluation</code> 把合法的 0 分改写为 1
+                分，可能把失败的策略评估标记为成功。
+              </p>
+              <div class="diff-block" aria-label="失败断言">
+                <span>- expected score: <strong>0</strong></span>
+                <span>+ received score: <strong>1</strong></span>
+              </div>
+              <a
+                href="https://github.com/wellkilo/repopilot-testbed/issues/1"
+                target="_blank"
+                rel="noreferrer"
+              >
+                打开真实 Issue（需 GitHub 登录）
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </article>
+
+          <div class="proof-evidence">
+            <article class="proof-card reveal" data-delay="80">
+              <span class="proof-label">TESTBED CI</span>
+              <strong>Target failure reproduced</strong>
+              <div class="check-list">
+                <span class="is-pass">npm ci</span>
+                <span class="is-pass">typecheck</span>
+                <span class="is-fail">regression test</span>
+              </div>
+              <a
+                href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31680709748"
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看失败 CI（需 GitHub 登录）
+                <span aria-hidden="true">↗</span>
+              </a>
+            </article>
+
+            <article class="proof-card reveal" data-delay="150">
+              <span class="proof-label">REPOPILOT CI</span>
+              <strong data-ci-title>Project validation passed</strong>
+              <div class="check-list">
+                <span class="is-pass">15 tests</span>
+                <span class="is-pass">lint</span>
+                <span class="is-pass">build</span>
+              </div>
+              <a
+                href="https://github.com/wellkilo/RepoPilot/actions/workflows/ci.yml"
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看项目 CI
+                <span aria-hidden="true">↗</span>
+              </a>
+            </article>
+
+            <article class="proof-card proof-card-live reveal" data-delay="220">
+              <span class="proof-label">LIVE REPOSITORY</span>
+              <strong data-repo-status>Public · Apache-2.0</strong>
+              <div class="repo-stats">
+                <div><span data-stars>0</span><small>Stars</small></div>
+                <div><span data-forks>0</span><small>Forks</small></div>
+                <div><span data-open-issues>—</span><small>Open issues</small></div>
+              </div>
+              <span class="live-source" data-live-source>静态证据已加载</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="opensource-section" aria-labelledby="opensource-title">
+        <div class="section-shell opensource-layout">
+          <div class="reveal">
+            <div class="section-index">07 / OPEN SOURCE</div>
+            <p class="section-kicker">Infrastructure, not only a demo</p>
+            <h2 id="opensource-title">开放代码，也开放协作契约</h2>
+            <p>
+              Control Plane、Agent Identity、Skill、MCP、Evidence Schema、测试床和部署文档均可复用。
+              商业 API 与模型仅作为运行时选项，不进入仓库。
+            </p>
+            <div class="opensource-actions">
+              <button class="clone-command" type="button" data-copy-command>
+                <code>git clone https://github.com/wellkilo/RepoPilot.git</code>
+                <span data-copy-label>复制</span>
+              </button>
+              <a
+                href="https://github.com/wellkilo/RepoPilot/blob/main/LICENSE"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Apache-2.0
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="asset-matrix reveal" data-delay="120">
+            <a
+              href="https://github.com/wellkilo/RepoPilot/tree/main/deploy/agentteams"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>01</span>
+              <strong>Agent Spec</strong>
+              <small>5 Workers · 1 Team</small>
+            </a>
+            <a
+              href="https://github.com/wellkilo/RepoPilot/tree/main/skills"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>02</span>
+              <strong>Skills</strong>
+              <small>5 reusable contracts</small>
+            </a>
+            <a
+              href="https://github.com/wellkilo/RepoPilot/blob/main/API.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>03</span>
+              <strong>MCP & API</strong>
+              <small>Typed schemas</small>
+            </a>
+            <a
+              href="https://github.com/wellkilo/RepoPilot/tree/main/docs"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>04</span>
+              <strong>Docs</strong>
+              <small>Architecture · Security · Demo</small>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <div class="section-shell reveal">
+          <span class="section-kicker">RepoPilot · Agent Infra</span>
+          <h2>让仓库自动化变得<br />可观察、可审查、可逆转</h2>
+          <div class="hero-actions">
+            <a
+              class="button button-primary"
+              href="https://github.com/wellkilo/RepoPilot"
+              target="_blank"
+              rel="noreferrer"
+            >
+              在 GitHub 查看项目
+              <span aria-hidden="true">↗</span>
+            </a>
+            <a class="button button-secondary" href="#top">返回顶部 ↑</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>RepoPilot</strong>
+        <span>Evidence-first repository maintenance AgentTeam</span>
+      </div>
+      <div>
+        <span>Apache-2.0</span>
+        <span>© <span data-year></span> RepoPilot contributors</span>
+      </div>
+    </footer>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
