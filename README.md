@@ -1,11 +1,31 @@
 <div align="center">
-  <br />
-  <h1>RepoPilot</h1>
+  <a href="https://wellkilo.github.io/RepoPilot/">
+    <img
+      src="docs/assets/brand/repopilot-logo.svg"
+      width="520"
+      alt="RepoPilot — Evidence-first AgentTeam"
+    />
+  </a>
+  <br /><br />
   <p><strong>面向开源与企业研发团队的可审计仓库自治维护 AgentTeam</strong></p>
   <p>
     将 GitHub Issue 与失败 CI 安全推进到经过独立验证的 Pull Request，
     并完整保留决策、工具、审批、回滚点与经验证据。
   </p>
+  <br />
+</div>
+
+<a href="https://wellkilo.github.io/RepoPilot/">
+  <img
+    src="docs/assets/brand/readme-hero.svg"
+    width="100%"
+    alt="RepoPilot 从 Issue 到 Verified PR，不跳过任何证据"
+  />
+</a>
+
+<br />
+
+<div align="center">
   <p>
     <a href="https://wellkilo.github.io/RepoPilot/">
       <img alt="Project Site" src="https://img.shields.io/badge/project_site-live-49d6d0?style=flat-square" />
@@ -24,6 +44,7 @@
   </p>
   <p>
     <a href="https://wellkilo.github.io/RepoPilot/">项目网站</a> ·
+    <a href="#使用过程演示">使用过程</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="docs/architecture.md">架构</a> ·
     <a href="API.md">API / MCP</a> ·
@@ -47,6 +68,31 @@
 > 之上，面向 GOAI「新智基座 · Agent Infra」赛道设计。默认策略为
 > `pull_request_only`：Agent 可以创建分支、提交和 Pull Request，但不能自动合并、
 > 删除分支、修改权限或密钥。
+
+## 使用过程演示
+
+<div align="center">
+  <a href="https://wellkilo.github.io/RepoPilot/#loop">
+    <img
+      src="docs/assets/demo/repopilot-workflow.gif"
+      width="100%"
+      alt="RepoPilot 使用流程：Issue、Triage、Locate、Patch、Verify、Verified PR"
+    />
+  </a>
+  <p>
+    <sub>
+      Issue → Repo Lead 分诊 → Locator 定位 → Fixer 最小修复 → Verifier 独立验证 → Verified PR
+    </sub>
+  </p>
+  <p>
+    <a href="https://wellkilo.github.io/RepoPilot/#loop"><strong>打开可交互的 8 阶段闭环 ↗</strong></a>
+    ·
+    <a href="docs/assets/demo/repopilot-workflow.mp4">下载高清 MP4</a>
+  </p>
+</div>
+
+> 动图展示的是确定性使用流程；在线展示站还提供可点击证据链、Agent Identity、
+> Skill/MCP、审批门禁以及真实 Issue/CI 证据。
 
 ## 维护闭环
 

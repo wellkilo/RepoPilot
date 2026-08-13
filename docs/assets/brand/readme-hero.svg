@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="680" viewBox="0 0 1600 680">
+  <defs>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" fill="none" stroke="#49d6d0" stroke-opacity=".045"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#49d6d0"/>
+      <stop offset=".52" stop-color="#65a8ff"/>
+      <stop offset="1" stop-color="#75df9b"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="81%" cy="20%" r="78%">
+      <stop offset="0" stop-color="#1e6784" stop-opacity=".4"/>
+      <stop offset=".62" stop-color="#071019" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1600" height="680" rx="30" fill="#071019"/>
+  <rect width="1600" height="680" rx="30" fill="url(#grid)"/>
+  <rect width="1600" height="680" rx="30" fill="url(#halo)"/>
+  <path d="M58 74H1542" stroke="#22384b" stroke-width="2"/>
+  <text x="62" y="48" fill="#7f96aa" font-family="monospace" font-size="15" letter-spacing="4">AGENTTEAMS · MCP · EVIDENCE LEDGER · HUMAN GATE</text>
+  <g transform="translate(70 128)">
+    <rect width="112" height="112" rx="16" fill="#0c1824" stroke="#49d6d0" stroke-width="2"/>
+    <path d="M20 87V25h34c17 0 27 9 27 23 0 10-5 17-14 20l20 19H68L51 70H39v17H20zm19-34h15c7 0 10-3 10-8s-3-8-10-8H39v16z" fill="url(#fade)"/>
+    <circle cx="90" cy="21" r="6" fill="#75df9b" filter="url(#glow)"/>
+  </g>
+  <text x="214" y="190" fill="#eaf3ff" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="700" letter-spacing="-3">RepoPilot</text>
+  <text x="76" y="310" fill="#49d6d0" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700">从 Issue 到 Verified PR</text>
+  <text x="76" y="367" fill="#c2d1df" font-family="Arial, Helvetica, sans-serif" font-size="30">不跳过任何证据</text>
+  <text x="76" y="423" fill="#7f96aa" font-family="Arial, Helvetica, sans-serif" font-size="21">五个 Agent 在可审批、可回放、可回滚的边界内协作</text>
+  <g transform="translate(76 493)">
+    <rect width="210" height="70" rx="8" fill="#0c1824" stroke="#22384b"/>
+    <text x="22" y="30" fill="#49d6d0" font-family="monospace" font-size="15">5 AGENTS</text>
+    <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">SEPARATION OF DUTIES</text>
+  </g>
+  <g transform="translate(304 493)">
+    <rect width="210" height="70" rx="8" fill="#0c1824" stroke="#22384b"/>
+    <text x="22" y="30" fill="#65a8ff" font-family="monospace" font-size="15">8 MCP TOOLS</text>
+    <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">TYPED CONTRACTS</text>
+  </g>
+  <g transform="translate(532 493)">
+    <rect width="250" height="70" rx="8" fill="#0c1824" stroke="#22384b"/>
+    <text x="22" y="30" fill="#75df9b" font-family="monospace" font-size="15">CHAIN VERIFIED</text>
+    <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">APPEND-ONLY EVIDENCE</text>
+  </g>
+  <g transform="translate(882 128)">
+    <rect width="646" height="442" fill="#091621" stroke="#2d5269" stroke-width="2"/>
+    <text x="28" y="38" fill="#7f96aa" font-family="monospace" font-size="12" letter-spacing="2">LIVE RUN · REPOPILOT-001</text>
+    <circle cx="592" cy="32" r="7" fill="#75df9b" filter="url(#glow)"/>
+    <path d="M28 58H618" stroke="#22384b"/>
+    <g transform="translate(30 91)">
+      <rect width="98" height="70" fill="#0d2431" stroke="#49d6d0"/>
+      <text x="14" y="20" fill="#49d6d0" font-family="monospace" font-size="10">01</text>
+      <text x="14" y="45" fill="#eaf3ff" font-family="Arial" font-size="17" font-weight="700">Issue</text>
+      <text x="14" y="61" fill="#7f96aa" font-family="monospace" font-size="9">INPUT</text>
+    </g>
+    <path d="M129 126H158" stroke="#49d6d0" stroke-width="2"/>
+    <g transform="translate(160 91)">
+      <rect width="98" height="70" fill="#0c1824" stroke="#22384b"/>
+      <text x="14" y="20" fill="#49d6d0" font-family="monospace" font-size="10">02</text>
+      <text x="14" y="45" fill="#eaf3ff" font-family="Arial" font-size="17" font-weight="700">Locate</text>
+      <text x="14" y="61" fill="#7f96aa" font-family="monospace" font-size="9">ROOT CAUSE</text>
+    </g>
+    <path d="M259 126H288" stroke="#65a8ff" stroke-width="2"/>
+    <g transform="translate(290 91)">
+      <rect width="98" height="70" fill="#0c1824" stroke="#22384b"/>
+      <text x="14" y="20" fill="#65a8ff" font-family="monospace" font-size="10">03</text>
+      <text x="14" y="45" fill="#eaf3ff" font-family="Arial" font-size="17" font-weight="700">Patch</text>
+      <text x="14" y="61" fill="#7f96aa" font-family="monospace" font-size="9">MINIMAL DIFF</text>
+    </g>
+    <path d="M389 126H418" stroke="#ffb84a" stroke-width="2"/>
+    <g transform="translate(420 91)">
+      <rect width="98" height="70" fill="#0c1824" stroke="#22384b"/>
+      <text x="14" y="20" fill="#ffb84a" font-family="monospace" font-size="10">04</text>
+      <text x="14" y="45" fill="#eaf3ff" font-family="Arial" font-size="17" font-weight="700">Gate</text>
+      <text x="14" y="61" fill="#7f96aa" font-family="monospace" font-size="9">HUMAN</text>
+    </g>
+    <path d="M519 126H548" stroke="#75df9b" stroke-width="2"/>
+    <g transform="translate(550 91)">
+      <rect width="68" height="70" fill="#0d2a22" stroke="#75df9b"/>
+      <text x="12" y="20" fill="#75df9b" font-family="monospace" font-size="10">05</text>
+      <text x="12" y="45" fill="#eaf3ff" font-family="Arial" font-size="15" font-weight="700">PR</text>
+      <text x="12" y="61" fill="#75df9b" font-family="monospace" font-size="8">VERIFIED</text>
+    </g>
+    <rect x="30" y="196" width="588" height="183" fill="#071019" stroke="#22384b"/>
+    <text x="52" y="229" fill="#49d6d0" font-family="monospace" font-size="12">EVIDENCE · CI RESULT</text>
+    <text x="52" y="271" fill="#eaf3ff" font-family="Arial" font-size="24" font-weight="700">Before failed. After passed.</text>
+    <text x="52" y="309" fill="#7f96aa" font-family="Arial" font-size="15">Typecheck · regression test · GitHub Checks</text>
+    <path d="M52 336H596" stroke="#22384b"/>
+    <text x="52" y="360" fill="#547086" font-family="monospace" font-size="10">PREV c135f1aa…88e0</text>
+    <text x="415" y="360" fill="#75df9b" font-family="monospace" font-size="10">CHAIN e8360c91…70bf</text>
+    <text x="30" y="414" fill="#547086" font-family="monospace" font-size="10">TRACE 3cad22c237f6</text>
+    <text x="480" y="414" fill="#75df9b" font-family="monospace" font-size="10">CHAIN VERIFIED</text>
+  </g>
+  <text x="76" y="626" fill="#547086" font-family="monospace" font-size="14">wellkilo.github.io/RepoPilot</text>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#49d6d0"/>
+      <stop offset="1" stop-color="#65a8ff"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="82" fill="#071019"/>
+  <rect x="42" y="42" width="428" height="428" rx="55" fill="#0c1824" stroke="#22384b" stroke-width="8"/>
+  <path d="M88 150H424M88 256H424M88 362H424M150 88V424M256 88V424M362 88V424"
+        fill="none" stroke="#49d6d0" stroke-opacity=".055" stroke-width="4"/>
+  <path d="M132 388V124h146c69 0 112 40 112 98 0 40-21 72-58 86l84 80h-81l-73-72h-54v72h-76zm76-143h64c28 0 42-13 42-34s-14-34-42-34h-64v68z"
+        fill="url(#signal)"/>
+  <circle cx="388" cy="104" r="17" fill="#75df9b" filter="url(#glow)"/>
+  <path d="M388 130v54M388 184l-30 30M388 184l30 30" fill="none" stroke="#75df9b" stroke-width="8" stroke-linecap="round"/>
+</svg>

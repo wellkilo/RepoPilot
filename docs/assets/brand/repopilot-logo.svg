@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180">
+  <defs>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#49d6d0"/>
+      <stop offset="1" stop-color="#65a8ff"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="720" height="180" rx="20" fill="#071019"/>
+  <g transform="translate(24 20)">
+    <rect width="140" height="140" rx="16" fill="#0c1824" stroke="#22384b" stroke-width="2"/>
+    <path d="M24 35H116M24 70H116M24 105H116M35 24V116M70 24V116M105 24V116"
+          fill="none" stroke="#49d6d0" stroke-opacity=".055"/>
+    <path d="M34 114V36h43c20 0 33 12 33 29 0 12-6 21-17 25l25 24H94L73 93H57v21H34zm23-42h19c8 0 12-4 12-10S84 52 76 52H57v20z"
+          fill="url(#signal)"/>
+    <circle cx="113" cy="28" r="5" fill="#75df9b" filter="url(#glow)"/>
+    <path d="M112 36v18M112 54l-9 9M112 54l9 9" fill="none" stroke="#75df9b" stroke-width="2"/>
+  </g>
+  <g transform="translate(196 39)">
+    <text x="0" y="54" fill="#eaf3ff" font-family="Arial, Helvetica, sans-serif" font-size="55" font-weight="700" letter-spacing="-2">RepoPilot</text>
+    <text x="2" y="91" fill="#49d6d0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" font-weight="600" letter-spacing="2">EVIDENCE-FIRST AGENTTEAM</text>
+    <text x="2" y="121" fill="#7f96aa" font-family="Arial, Helvetica, sans-serif" font-size="16">Observable · Reviewable · Reversible</text>
+  </g>
+</svg>
