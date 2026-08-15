@@ -56,11 +56,14 @@ Then render:
 
 ```bash
 export AGENTTEAMS_MODEL=qwen3.5-plus
-export AGENTTEAMS_QWENPAW_WORKER_IMAGE=higress-registry.cn-hangzhou.cr.aliyuncs.com/agentteams/agentteams-qwenpaw-worker:v1.2.2
+export AGENTTEAMS_COPAW_WORKER_IMAGE=higress-registry.cn-hangzhou.cr.aliyuncs.com/agentteams/agentteams-copaw-worker:v1.2.2
 export REPOPILOT_MCP_URL=https://agentteams.example.com/mcp-servers/repopilot/mcp
 envsubst < deploy/agentteams/repopilot-team.yaml > /tmp/repopilot-team.yaml
 agt apply -f /tmp/repopilot-team.yaml
 ```
+
+RepoPilot uses AgentTeams `v1.2.2`'s default CoPaw Worker runtime. QwenPaw is
+opt-in in this release and is not part of the reproducible deployment path.
 
 ## GitHub Webhook
 

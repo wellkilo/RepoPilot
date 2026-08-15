@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam，将 GitHub Issue 与失败 CI 安全推进到经过独立验证的 Pull Request。"
+      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam。在线 Demo 可回放真实 Issue、根因定位、最小补丁、CI 验证与 Pull Request 证据。"
     />
     <meta
       name="keywords"
@@ -61,6 +61,7 @@
       </button>
 
       <nav class="primary-nav" id="primary-navigation" data-nav>
+        <a href="#demo">在线 Demo</a>
         <a href="#loop">维护闭环</a>
         <a href="#team">AgentTeam</a>
         <a href="#architecture">架构</a>
@@ -98,8 +99,8 @@
               的边界内协作，把 GitHub 问题安全推进到经过独立验证的 Pull Request。
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="#loop">
-                查看 8 阶段闭环
+              <a class="button button-primary" href="#demo">
+                体验真实 Run
                 <span aria-hidden="true">↓</span>
               </a>
               <a
@@ -135,12 +136,12 @@
           <div class="flight-recorder reveal" data-delay="140">
             <div class="recorder-head">
               <div>
-                <span>LIVE RUN</span>
-                <strong>REPOPILOT-001</strong>
+                <span>VERIFIED RUN</span>
+                <strong>RUN 11c63758</strong>
               </div>
               <div class="recorder-status">
                 <span></span>
-                Evidence chain healthy
+                16 evidence · chain valid
               </div>
             </div>
 
@@ -209,7 +210,7 @@
             </div>
 
             <div class="recorder-foot">
-              <span>TRACE 3cad22c237f6</span>
+              <span>TRACE 332f8652f35d</span>
               <span>CHAIN VERIFIED</span>
             </div>
           </div>
@@ -366,10 +367,210 @@
         </div>
       </section>
 
+      <section class="demo-section" id="demo" aria-labelledby="demo-title">
+        <div class="section-shell">
+          <div class="section-heading reveal">
+            <div>
+              <div class="section-index">02 / VERIFIED DEMO</div>
+              <p class="section-kicker">A real run, replayed from evidence</p>
+              <h2 id="demo-title">六步回放一次真实修复</h2>
+            </div>
+            <p>
+              无需连接模型或登录控制台即可体验。下方内容来自真实 RepoPilot Run： Issue #1
+              被定位并以一行补丁修复，PR #2 的 CI 已通过，且没有自动合并。
+            </p>
+          </div>
+
+          <div class="demo-console reveal" data-delay="100">
+            <header class="demo-console-head">
+              <div>
+                <span class="demo-live-mark" aria-hidden="true"></span>
+                <div>
+                  <small>REPOSITORY MAINTENANCE RUN</small>
+                  <strong>wellkilo/repopilot-testbed · Issue #1</strong>
+                </div>
+              </div>
+              <div class="demo-run-facts" aria-label="运行摘要">
+                <span>RUN <strong>11c63758</strong></span>
+                <span>TRACE <strong>332f8652f35d</strong></span>
+                <span class="is-success">SUCCEEDED</span>
+              </div>
+            </header>
+
+            <div class="demo-player">
+              <div class="demo-timeline" role="tablist" aria-label="真实运行阶段">
+                <button
+                  class="is-active"
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="demo-scene"
+                  data-demo-step="0"
+                >
+                  <span>01</span>
+                  <strong>Issue</strong>
+                  <small>接收任务</small>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="demo-scene"
+                  data-demo-step="1"
+                >
+                  <span>02</span>
+                  <strong>Locate</strong>
+                  <small>证明根因</small>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="demo-scene"
+                  data-demo-step="2"
+                >
+                  <span>03</span>
+                  <strong>Patch</strong>
+                  <small>最小修复</small>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="demo-scene"
+                  data-demo-step="3"
+                >
+                  <span>04</span>
+                  <strong>Verify</strong>
+                  <small>独立验证</small>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="demo-scene"
+                  data-demo-step="4"
+                >
+                  <span>05</span>
+                  <strong>PR</strong>
+                  <small>安全交付</small>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="demo-scene"
+                  data-demo-step="5"
+                >
+                  <span>06</span>
+                  <strong>Archive</strong>
+                  <small>沉淀证据</small>
+                </button>
+              </div>
+
+              <article class="demo-scene" id="demo-scene" role="tabpanel" aria-live="polite">
+                <div class="demo-scene-copy">
+                  <div class="demo-scene-meta">
+                    <span data-demo-owner>REPO LEAD</span>
+                    <strong data-demo-status>INPUT ACCEPTED</strong>
+                  </div>
+                  <h3 data-demo-title>合法的 0 分被错误改写为 1 分</h3>
+                  <p data-demo-copy>
+                    RepoPilot 读取 GitHub Issue，锁定执行策略为
+                    pull_request_only，并把验收标准交给维护团队。
+                  </p>
+                  <dl class="demo-evidence-grid">
+                    <div>
+                      <dt>EVIDENCE</dt>
+                      <dd data-demo-evidence>01 · task_input</dd>
+                    </div>
+                    <div>
+                      <dt>ARTIFACT</dt>
+                      <dd data-demo-artifact>Issue #1</dd>
+                    </div>
+                    <div>
+                      <dt>BOUNDARY</dt>
+                      <dd data-demo-boundary>PR only</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div class="demo-terminal" aria-label="当前阶段证据片段">
+                  <div class="demo-terminal-bar">
+                    <span></span><span></span><span></span>
+                    <strong data-demo-terminal-label>source-context.json</strong>
+                  </div>
+                  <pre><code data-demo-code>{
+  "repository": "wellkilo/repopilot-testbed",
+  "issueNumber": 1,
+  "executionPolicy": "pull_request_only"
+}</code></pre>
+                </div>
+              </article>
+            </div>
+
+            <footer class="demo-console-foot">
+              <div class="demo-progress" aria-hidden="true">
+                <span data-demo-progress></span>
+              </div>
+              <button class="demo-play" type="button" data-demo-play aria-pressed="false">
+                <span data-demo-play-icon>▶</span>
+                <span data-demo-play-label>播放完整 Run</span>
+              </button>
+              <span class="demo-chain">16 EVIDENCE · CHAIN VALID</span>
+            </footer>
+          </div>
+
+          <div class="demo-outcomes reveal" data-delay="160">
+            <article>
+              <strong>5</strong>
+              <span>CoPaw Workers</span>
+              <small>Repo Lead + 4 specialists</small>
+            </article>
+            <article>
+              <strong>1 file</strong>
+              <span>Minimal patch</span>
+              <small>+1 / -1</small>
+            </article>
+            <article>
+              <strong>SUCCESS</strong>
+              <span>GitHub Actions</span>
+              <small>typecheck + test</small>
+            </article>
+            <article>
+              <strong>OPEN</strong>
+              <span>Pull Request #2</span>
+              <small>Clean · not auto-merged</small>
+            </article>
+          </div>
+
+          <div class="demo-links reveal" data-delay="220">
+            <span>查看外部证据</span>
+            <a
+              href="https://github.com/wellkilo/repopilot-testbed/pull/2"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Pull Request #2 ↗
+            </a>
+            <a
+              href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31793190761"
+              target="_blank"
+              rel="noreferrer"
+            >
+              CI Run 31793190761 ↗
+            </a>
+            <a href="https://github.com/wellkilo/RepoPilot" target="_blank" rel="noreferrer">
+              RepoPilot Source ↗
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section class="team-section section-shell" id="team" aria-labelledby="team-title">
         <div class="section-heading reveal">
           <div>
-            <div class="section-index">02 / AGENT IDENTITY</div>
+            <div class="section-index">03 / AGENT IDENTITY</div>
             <p class="section-kicker">Separation of duties by design</p>
             <h2 id="team-title">五个 Agent，不是五份相似提示词</h2>
           </div>
@@ -467,7 +668,7 @@
         <div class="section-shell">
           <div class="section-heading reveal">
             <div>
-              <div class="section-index">03 / ARCHITECTURE</div>
+              <div class="section-index">04 / ARCHITECTURE</div>
               <p class="section-kicker">Judgment, capability, connection, evidence</p>
               <h2 id="architecture-title">四层解耦，替换工具不重写协同</h2>
             </div>
@@ -522,7 +723,7 @@
       <section class="skills-section section-shell" aria-labelledby="skills-title">
         <div class="section-heading reveal">
           <div>
-            <div class="section-index">04 / SKILL & MCP</div>
+            <div class="section-index">05 / SKILL & MCP</div>
             <p class="section-kicker">Reusable contracts, not one-off prompts</p>
             <h2 id="skills-title">把维护经验做成可复用能力</h2>
           </div>
@@ -585,7 +786,7 @@
         <div class="section-shell">
           <div class="section-heading reveal">
             <div>
-              <div class="section-index">05 / SAFETY</div>
+              <div class="section-index">06 / SAFETY</div>
               <p class="section-kicker">Autonomy stops at the pull request</p>
               <h2 id="safety-title">安全边界是执行链的一部分</h2>
             </div>
@@ -646,13 +847,13 @@
       <section class="proof-section section-shell" id="proof" aria-labelledby="proof-title">
         <div class="section-heading reveal">
           <div>
-            <div class="section-index">06 / PROOF</div>
-            <p class="section-kicker">A deterministic failure, not a staged screenshot</p>
-            <h2 id="proof-title">真实 Issue 与失败 CI 构成可复现测试床</h2>
+            <div class="section-index">07 / PROOF</div>
+            <p class="section-kicker">A deterministic fix, verified by GitHub Actions</p>
+            <h2 id="proof-title">真实 Issue、最小补丁与绿色 CI</h2>
           </div>
           <p>
-            合法的 <code>score = 0</code> 被
-            <code>|| 1</code> 错误回退。类型检查通过，只有目标回归用例失败。
+            合法的 <code>score = 0</code> 被 <code>|| 1</code> 错误回退。RepoPilot
+            只改一处运算符，并由独立 Verifier 与 GitHub Actions 共同验证。
           </p>
         </div>
 
@@ -669,9 +870,9 @@
                 <code>normalizeEvaluation</code> 把合法的 0 分改写为 1
                 分，可能把失败的策略评估标记为成功。
               </p>
-              <div class="diff-block" aria-label="失败断言">
-                <span>- expected score: <strong>0</strong></span>
-                <span>+ received score: <strong>1</strong></span>
+              <div class="diff-block" aria-label="最小补丁">
+                <span>- score: result.score <strong>|| 1</strong></span>
+                <span>+ score: result.score <strong>?? 1</strong></span>
               </div>
               <a
                 href="https://github.com/wellkilo/repopilot-testbed/issues/1"
@@ -686,37 +887,37 @@
 
           <div class="proof-evidence">
             <article class="proof-card reveal" data-delay="80">
-              <span class="proof-label">TESTBED CI</span>
-              <strong>Target failure reproduced</strong>
+              <span class="proof-label">PULL REQUEST #2</span>
+              <strong>Open · clean · focused</strong>
               <div class="check-list">
-                <span class="is-pass">npm ci</span>
-                <span class="is-pass">typecheck</span>
-                <span class="is-fail">regression test</span>
+                <span class="is-pass">1 file</span>
+                <span class="is-pass">+1 / -1</span>
+                <span class="is-pass">not auto-merged</span>
               </div>
               <a
-                href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31680709748"
+                href="https://github.com/wellkilo/repopilot-testbed/pull/2"
                 target="_blank"
                 rel="noreferrer"
               >
-                查看失败 CI（需 GitHub 登录）
+                查看 Pull Request（需 GitHub 登录）
                 <span aria-hidden="true">↗</span>
               </a>
             </article>
 
             <article class="proof-card reveal" data-delay="150">
-              <span class="proof-label">REPOPILOT CI</span>
-              <strong data-ci-title>Project validation passed</strong>
+              <span class="proof-label">GITHUB ACTIONS</span>
+              <strong data-ci-title>CI run completed successfully</strong>
               <div class="check-list">
-                <span class="is-pass">15 tests</span>
-                <span class="is-pass">lint</span>
-                <span class="is-pass">build</span>
+                <span class="is-pass">npm ci</span>
+                <span class="is-pass">typecheck</span>
+                <span class="is-pass">test</span>
               </div>
               <a
-                href="https://github.com/wellkilo/RepoPilot/actions/workflows/ci.yml"
+                href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31793190761"
                 target="_blank"
                 rel="noreferrer"
               >
-                查看项目 CI
+                查看 CI Run 31793190761（需 GitHub 登录）
                 <span aria-hidden="true">↗</span>
               </a>
             </article>
@@ -738,7 +939,7 @@
       <section class="opensource-section" aria-labelledby="opensource-title">
         <div class="section-shell opensource-layout">
           <div class="reveal">
-            <div class="section-index">07 / OPEN SOURCE</div>
+            <div class="section-index">08 / OPEN SOURCE</div>
             <p class="section-kicker">Infrastructure, not only a demo</p>
             <h2 id="opensource-title">开放代码，也开放协作契约</h2>
             <p>
@@ -807,8 +1008,12 @@
           <span class="section-kicker">RepoPilot · Agent Infra</span>
           <h2>让仓库自动化变得<br />可观察、可审查、可逆转</h2>
           <div class="hero-actions">
+            <a class="button button-primary" href="#demo">
+              回放在线 Demo
+              <span aria-hidden="true">↑</span>
+            </a>
             <a
-              class="button button-primary"
+              class="button button-secondary"
               href="https://github.com/wellkilo/RepoPilot"
               target="_blank"
               rel="noreferrer"
@@ -816,7 +1021,6 @@
               在 GitHub 查看项目
               <span aria-hidden="true">↗</span>
             </a>
-            <a class="button button-secondary" href="#top">返回顶部 ↑</a>
           </div>
         </div>
       </section>

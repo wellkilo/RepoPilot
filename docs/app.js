@@ -1,45 +1,139 @@
 const traceData = {
   input: {
     type: "INPUT",
-    time: "10:15:02.184",
+    time: "18:10:46",
     title: "GitHub Issue #1 已进入维护队列",
     copy: "Webhook HMAC 验签通过；delivery ID 已登记。执行策略锁定为 pull_request_only。",
     prev: "GENESIS",
-    hash: "4f8ab21e…9c12"
+    hash: "1186ee63…7969c0"
   },
   decision: {
     type: "DECISION",
-    time: "10:16:47.029",
+    time: "18:14:09",
     title: "Locator 证明 score=0 被 truthiness fallback 改写",
     copy: "基线复现仅失败一条目标回归用例；根因锁定为 result.score || 1，影响面限定在 evaluation normalization。",
-    prev: "4f8ab21e…9c12",
-    hash: "7be20f43…1a6d"
+    prev: "EVIDENCE #02",
+    hash: "VERIFIED IN LEDGER"
   },
   tool: {
     type: "TOOL RESULT",
-    time: "10:20:11.603",
-    title: "Pull Request 已创建，Fixer 在权限边界内停止",
-    copy: "github_create_pull_request 返回 PR 引用、head SHA 与 rollback point。未执行 merge、delete branch 或 force push。",
-    prev: "7be20f43…1a6d",
-    hash: "9ca13d7b…4f21"
+    time: "18:18:32",
+    title: "Fixer 提交一行最小补丁",
+    copy: "result.score || 1 被替换为 result.score ?? 1；提交 dd67868d 只修改一个文件，保留合法的零分。",
+    prev: "EVIDENCE #08",
+    hash: "COMMIT dd67868d"
   },
   approval: {
-    type: "APPROVAL",
-    time: "10:22:38.410",
-    title: "高风险动作进入人工门禁",
-    copy: "审批记录包含 actor、comment 与 version。审批只能消费一次，旧版本和重复消费都会返回冲突。",
-    prev: "9ca13d7b…4f21",
-    hash: "c135f1aa…88e0"
+    type: "POLICY",
+    time: "18:20:05",
+    title: "自治在 Pull Request 处停止",
+    copy: "PR #2 已创建并保持 OPEN。系统没有执行 merge、delete branch、force push 或权限修改。",
+    prev: "EVIDENCE #12",
+    hash: "PR #2 · OPEN"
   },
   verified: {
     type: "CI RESULT",
-    time: "10:27:06.955",
-    title: "Verifier 完成 before / after 与 GitHub Checks",
-    copy: "基线失败、补丁通过；typecheck、测试与 Check Run 均有证据。Archivist 可以写入经过验证的 Runbook。",
-    prev: "c135f1aa…88e0",
-    hash: "e8360c91…70bf"
+    time: "18:23:41",
+    title: "Verifier 确认 GitHub Actions 全部通过",
+    copy: "npm ci、typecheck 与测试均为 SUCCESS。Run 以 16 条 Evidence 完成，证据链校验有效。",
+    prev: "EVIDENCE #15",
+    hash: "CHAIN VALID"
   }
 };
+
+const demoData = [
+  {
+    owner: "REPO LEAD",
+    status: "INPUT ACCEPTED",
+    title: "合法的 0 分被错误改写为 1 分",
+    copy: "RepoPilot 读取 GitHub Issue，锁定执行策略为 pull_request_only，并把验收标准交给维护团队。",
+    evidence: "01 · task_input",
+    artifact: "Issue #1",
+    boundary: "PR only",
+    terminalLabel: "source-context.json",
+    code: `{
+  "repository": "wellkilo/repopilot-testbed",
+  "issueNumber": 1,
+  "executionPolicy": "pull_request_only"
+}`
+  },
+  {
+    owner: "LOCATOR",
+    status: "ROOT CAUSE PROVED",
+    title: "truthiness fallback 吞掉了合法零分",
+    copy: "Locator 复现目标测试并限定影响面：数值 0 是合法结果，但 result.score || 1 把它当成缺失值。",
+    evidence: "06 · root_cause",
+    artifact: "src/evaluation.ts",
+    boundary: "Read-only analysis",
+    terminalLabel: "baseline-reproduction.log",
+    code: `$ npm run typecheck
+PASS
+
+$ npm test
+Expected score: 0
+Received score: 1`
+  },
+  {
+    owner: "FIXER",
+    status: "MINIMAL PATCH",
+    title: "只改一处回退运算符",
+    copy: "Fixer 使用空值合并运算符保留 0，仅在 score 为 null 或 undefined 时回退；补丁范围为 1 个文件、+1/-1。",
+    evidence: "09 · patch",
+    artifact: "Commit dd67868d",
+    boundary: "No force push",
+    terminalLabel: "src/evaluation.ts.diff",
+    code: `- score: result.score || 1,
++ score: result.score ?? 1,`
+  },
+  {
+    owner: "VERIFIER",
+    status: "CI SUCCESS",
+    title: "类型检查与目标回归测试全部通过",
+    copy: "Verifier 独立检查补丁结果；GitHub Actions Run 31793190761 的 test job 完成且结论为 SUCCESS。",
+    evidence: "13 · verification",
+    artifact: "CI 31793190761",
+    boundary: "Verifier cannot edit",
+    terminalLabel: "github-actions.log",
+    code: `npm ci              SUCCESS
+npm run typecheck   SUCCESS
+npm test            SUCCESS`
+  },
+  {
+    owner: "FIXER + REPO LEAD",
+    status: "PR OPEN / CLEAN",
+    title: "PR #2 已创建，但没有自动合并",
+    copy: "系统交付可审查的 Pull Request，并在安全边界内停止。合并仍由人类决定。",
+    evidence: "14 · pull_request",
+    artifact: "PR #2",
+    boundary: "No auto-merge",
+    terminalLabel: "pull-request.json",
+    code: `{
+  "number": 2,
+  "state": "OPEN",
+  "mergeStateStatus": "CLEAN",
+  "changedFiles": 1,
+  "additions": 1,
+  "deletions": 1
+}`
+  },
+  {
+    owner: "ARCHIVIST",
+    status: "CHAIN VALID",
+    title: "16 条 Evidence 构成可回放证据链",
+    copy: "任务输入、根因、补丁、Git 引用和 CI 结果全部关联到同一 Run 与 Trace；经验被整理为可复用规则。",
+    evidence: "16 · runbook",
+    artifact: "Run 11c63758",
+    boundary: "Verified facts only",
+    terminalLabel: "verified-runbook.md",
+    code: `Rule:
+Nullable numeric fields must not use
+truthiness fallback.
+
+Run: 11c63758
+Trace: 332f8652f35d
+Evidence: 16 · VALID`
+  }
+];
 
 const loopData = [
   {
@@ -205,6 +299,107 @@ document.querySelectorAll("[data-loop-step]").forEach((tab) => {
     );
   });
 });
+
+const demoElements = {
+  owner: document.querySelector("[data-demo-owner]"),
+  status: document.querySelector("[data-demo-status]"),
+  title: document.querySelector("[data-demo-title]"),
+  copy: document.querySelector("[data-demo-copy]"),
+  evidence: document.querySelector("[data-demo-evidence]"),
+  artifact: document.querySelector("[data-demo-artifact]"),
+  boundary: document.querySelector("[data-demo-boundary]"),
+  terminalLabel: document.querySelector("[data-demo-terminal-label]"),
+  code: document.querySelector("[data-demo-code]"),
+  scene: document.querySelector("#demo-scene"),
+  progress: document.querySelector("[data-demo-progress]"),
+  play: document.querySelector("[data-demo-play]"),
+  playIcon: document.querySelector("[data-demo-play-icon]"),
+  playLabel: document.querySelector("[data-demo-play-label]")
+};
+
+let activeDemoStep = 0;
+let demoTimer = null;
+
+const renderDemoStep = (index, animate = true) => {
+  const data = demoData[index];
+  if (!data) {
+    return;
+  }
+
+  activeDemoStep = index;
+  document.querySelectorAll("[data-demo-step]").forEach((button, buttonIndex) => {
+    const active = buttonIndex === index;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+
+  demoElements.owner.textContent = data.owner;
+  demoElements.status.textContent = data.status;
+  demoElements.title.textContent = data.title;
+  demoElements.copy.textContent = data.copy;
+  demoElements.evidence.textContent = data.evidence;
+  demoElements.artifact.textContent = data.artifact;
+  demoElements.boundary.textContent = data.boundary;
+  demoElements.terminalLabel.textContent = data.terminalLabel;
+  demoElements.code.textContent = data.code;
+  demoElements.progress.style.width = `${((index + 1) / demoData.length) * 100}%`;
+
+  if (animate) {
+    demoElements.scene?.animate(
+      [
+        { opacity: 0.35, transform: "translateY(8px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ],
+      { duration: 260, easing: "ease-out" }
+    );
+  }
+};
+
+const setDemoPlaying = (playing) => {
+  demoElements.play?.setAttribute("aria-pressed", String(playing));
+  demoElements.playIcon.textContent = playing ? "Ⅱ" : "▶";
+  demoElements.playLabel.textContent = playing ? "暂停回放" : "播放完整 Run";
+};
+
+const stopDemoPlayback = () => {
+  if (demoTimer !== null) {
+    window.clearInterval(demoTimer);
+    demoTimer = null;
+  }
+  setDemoPlaying(false);
+};
+
+const startDemoPlayback = () => {
+  stopDemoPlayback();
+  setDemoPlaying(true);
+  demoTimer = window.setInterval(() => {
+    const nextStep = (activeDemoStep + 1) % demoData.length;
+    renderDemoStep(nextStep);
+    if (nextStep === demoData.length - 1) {
+      window.setTimeout(stopDemoPlayback, 1800);
+    }
+  }, 3400);
+};
+
+document.querySelectorAll("[data-demo-step]").forEach((button, index) => {
+  button.addEventListener("click", () => {
+    stopDemoPlayback();
+    renderDemoStep(index);
+  });
+});
+
+demoElements.play?.addEventListener("click", () => {
+  if (demoTimer !== null) {
+    stopDemoPlayback();
+    return;
+  }
+  if (activeDemoStep === demoData.length - 1) {
+    renderDemoStep(0);
+  }
+  startDemoPlayback();
+});
+
+renderDemoStep(0, false);
 
 const revealObserver =
   "IntersectionObserver" in window

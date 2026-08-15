@@ -3,8 +3,23 @@
 ## Target
 
 - Issue: `wellkilo/repopilot-testbed#1`
-- Base commit: `9a6a3bec289fb3f943d875a50bdc965e19946fac`
-- Failed CI: `31680709748`
+- Pull Request: `wellkilo/repopilot-testbed#2`
+- Patch commit: `dd67868d9cb09d4f92b4fcd25d6ce1f3b7526205`
+- CI run: `31793190761`
+- RepoPilot Run: `11c63758-3cbe-40f9-a2d7-06d53428943b`
+- Trace: `332f8652f35deae8c6c73cd0fbd0888b`
+- Evidence: `16`, chain valid
+
+## Online Demo
+
+Open:
+
+```text
+https://wellkilo.github.io/RepoPilot/#demo
+```
+
+The public demo replays the verified run from evidence. It does not require a
+model API key, GitHub credential, or AgentTeams administrator account.
 
 ## Expected Agent Flow
 
@@ -19,12 +34,12 @@
 
 3. Locator identifies `result.score || 1` as the cause because numeric `0` is falsy.
 4. Fixer creates a focused branch, changes fallback to `result.score ?? 1`, and preserves the regression test.
-5. Fixer opens a Pull Request and stops.
+5. Fixer opens Pull Request #2 and stops.
 6. Verifier confirms:
    - test fails on base;
    - test passes on patch;
    - typecheck passes;
-   - GitHub Check Run passes.
+   - GitHub Actions Run `31793190761` passes.
 7. Archivist writes a Runbook: nullable numeric fields must not use truthiness fallback.
 8. If a merge is requested, Repo Lead creates a high-risk approval. The human may approve, but the demo does not need to execute merge.
 
@@ -34,7 +49,7 @@
 - RepoPilot evidence track.
 - Root-cause decision.
 - Branch and commit SHA.
-- Pull Request URL.
+- Pull Request #2 and patch commit.
 - CI before/after.
 - Approval gate.
 - Runbook retrieval.

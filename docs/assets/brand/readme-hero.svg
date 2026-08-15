@@ -48,7 +48,7 @@
   </g>
   <g transform="translate(882 128)">
     <rect width="646" height="442" fill="#091621" stroke="#2d5269" stroke-width="2"/>
-    <text x="28" y="38" fill="#7f96aa" font-family="monospace" font-size="12" letter-spacing="2">LIVE RUN · REPOPILOT-001</text>
+    <text x="28" y="38" fill="#7f96aa" font-family="monospace" font-size="12" letter-spacing="2">VERIFIED RUN · 11c63758</text>
     <circle cx="592" cy="32" r="7" fill="#75df9b" filter="url(#glow)"/>
     <path d="M28 58H618" stroke="#22384b"/>
     <g transform="translate(30 91)">
@@ -87,12 +87,12 @@
     </g>
     <rect x="30" y="196" width="588" height="183" fill="#071019" stroke="#22384b"/>
     <text x="52" y="229" fill="#49d6d0" font-family="monospace" font-size="12">EVIDENCE · CI RESULT</text>
-    <text x="52" y="271" fill="#eaf3ff" font-family="Arial" font-size="24" font-weight="700">Before failed. After passed.</text>
-    <text x="52" y="309" fill="#7f96aa" font-family="Arial" font-size="15">Typecheck · regression test · GitHub Checks</text>
+    <text x="52" y="271" fill="#eaf3ff" font-family="Arial" font-size="24" font-weight="700">PR #2 open. CI passed.</text>
+    <text x="52" y="309" fill="#7f96aa" font-family="Arial" font-size="15">1 file · +1/-1 · no auto-merge</text>
     <path d="M52 336H596" stroke="#22384b"/>
-    <text x="52" y="360" fill="#547086" font-family="monospace" font-size="10">PREV c135f1aa…88e0</text>
-    <text x="415" y="360" fill="#75df9b" font-family="monospace" font-size="10">CHAIN e8360c91…70bf</text>
-    <text x="30" y="414" fill="#547086" font-family="monospace" font-size="10">TRACE 3cad22c237f6</text>
+    <text x="52" y="360" fill="#547086" font-family="monospace" font-size="10">COMMIT dd67868d</text>
+    <text x="415" y="360" fill="#75df9b" font-family="monospace" font-size="10">16 EVIDENCE</text>
+    <text x="30" y="414" fill="#547086" font-family="monospace" font-size="10">TRACE 332f8652f35d</text>
     <text x="480" y="414" fill="#75df9b" font-family="monospace" font-size="10">CHAIN VERIFIED</text>
   </g>
   <text x="76" y="626" fill="#547086" font-family="monospace" font-size="14">wellkilo.github.io/RepoPilot</text>

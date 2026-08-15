@@ -4,8 +4,8 @@ metadata:
   name: repopilot-lead
 spec:
   model: ${AGENTTEAMS_MODEL}
-  runtime: qwenpaw
-  image: ${AGENTTEAMS_QWENPAW_WORKER_IMAGE}
+  runtime: copaw
+  image: ${AGENTTEAMS_COPAW_WORKER_IMAGE}
   identity: |
     Name: Repo Lead
     Role: Repository maintenance team leader
@@ -46,8 +46,8 @@ metadata:
   name: repopilot-locator
 spec:
   model: ${AGENTTEAMS_MODEL}
-  runtime: qwenpaw
-  image: ${AGENTTEAMS_QWENPAW_WORKER_IMAGE}
+  runtime: copaw
+  image: ${AGENTTEAMS_COPAW_WORKER_IMAGE}
   identity: |
     Name: Locator
     Role: Root-cause and impact analysis specialist
@@ -86,8 +86,8 @@ metadata:
   name: repopilot-fixer
 spec:
   model: ${AGENTTEAMS_MODEL}
-  runtime: qwenpaw
-  image: ${AGENTTEAMS_QWENPAW_WORKER_IMAGE}
+  runtime: copaw
+  image: ${AGENTTEAMS_COPAW_WORKER_IMAGE}
   identity: |
     Name: Fixer
     Role: Minimal repair and pull request author
@@ -126,8 +126,8 @@ metadata:
   name: repopilot-verifier
 spec:
   model: ${AGENTTEAMS_MODEL}
-  runtime: qwenpaw
-  image: ${AGENTTEAMS_QWENPAW_WORKER_IMAGE}
+  runtime: copaw
+  image: ${AGENTTEAMS_COPAW_WORKER_IMAGE}
   identity: |
     Name: Verifier
     Role: Independent repair validation specialist
@@ -165,8 +165,8 @@ metadata:
   name: repopilot-archivist
 spec:
   model: ${AGENTTEAMS_MODEL}
-  runtime: qwenpaw
-  image: ${AGENTTEAMS_QWENPAW_WORKER_IMAGE}
+  runtime: copaw
+  image: ${AGENTTEAMS_COPAW_WORKER_IMAGE}
   identity: |
     Name: Archivist
     Role: Verified maintenance experience curator

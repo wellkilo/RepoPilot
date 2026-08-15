@@ -44,7 +44,8 @@
   </p>
   <p>
     <a href="https://wellkilo.github.io/RepoPilot/">项目网站</a> ·
-    <a href="#使用过程演示">使用过程</a> ·
+    <a href="https://wellkilo.github.io/RepoPilot/#demo">在线 Demo</a> ·
+    <a href="#使用过程演示">流程演示</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="docs/architecture.md">架构</a> ·
     <a href="API.md">API / MCP</a> ·
@@ -72,7 +73,7 @@
 ## 使用过程演示
 
 <div align="center">
-  <a href="https://wellkilo.github.io/RepoPilot/#loop">
+  <a href="https://wellkilo.github.io/RepoPilot/#demo">
     <img
       src="docs/assets/demo/repopilot-workflow.gif"
       width="100%"
@@ -85,14 +86,16 @@
     </sub>
   </p>
   <p>
-    <a href="https://wellkilo.github.io/RepoPilot/#loop"><strong>打开可交互的 8 阶段闭环 ↗</strong></a>
+    <a href="https://wellkilo.github.io/RepoPilot/#demo"><strong>回放真实 Issue → PR Run ↗</strong></a>
+    ·
+    <a href="https://wellkilo.github.io/RepoPilot/#loop">查看 8 阶段系统闭环</a>
     ·
     <a href="docs/assets/demo/repopilot-workflow.mp4">下载高清 MP4</a>
   </p>
 </div>
 
-> 动图展示的是确定性使用流程；在线展示站还提供可点击证据链、Agent Identity、
-> Skill/MCP、审批门禁以及真实 Issue/CI 证据。
+> 在线 Demo 无需模型服务或管理员账号，基于真实 Run 回放 Issue 输入、根因定位、
+> 一行补丁、GitHub Actions 验证、PR #2 与 16 条 Evidence。
 
 ## 维护闭环
 
@@ -354,13 +357,18 @@ AgentTeams Matrix，Run 会停在 `awaiting_dispatch`，不会用 Mock Agent 伪
     <td><a href="https://github.com/wellkilo/repopilot-testbed/issues/1">#1 · Zero evaluation scores are normalized to one</a></td>
   </tr>
   <tr>
-    <td><strong>失败 CI</strong></td>
-    <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31680709748">GitHub Actions Run 31680709748</a></td>
+    <td><strong>修复 PR</strong></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/pull/2">Pull Request #2</a></td>
+  </tr>
+  <tr>
+    <td>绿色 CI</td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31793190761">GitHub Actions Run 31793190761</a></td>
   </tr>
 </table>
 
 测试床包含一个确定性缺陷：合法的 `score=0` 被 `|| 1` 误判为缺失值。
-类型检查通过，CI 只因对应回归用例失败，适合完整演示定位、修复、验证和 PR 证据链。
+RepoPilot 已将回退逻辑改为 `?? 1`，并通过 GitHub Actions 完成类型检查和目标回归测试。
+PR 保持开放，便于审查且未触发自动合并。
 
 ## 验证
 
