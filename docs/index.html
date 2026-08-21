@@ -136,12 +136,12 @@
           <div class="flight-recorder reveal" data-delay="140">
             <div class="recorder-head">
               <div>
-                <span>VERIFIED RUN</span>
-                <strong>RUN 11c63758</strong>
+                <span>PUBLIC ISSUE → PR</span>
+                <strong>TESTBED #3 → PR #4</strong>
               </div>
               <div class="recorder-status">
                 <span></span>
-                16 evidence · chain valid
+                public evidence · verifiable
               </div>
             </div>
 
@@ -163,13 +163,13 @@
                 aria-pressed="false"
               >
                 <span>02</span>
-                <strong>Decision</strong>
-                <small>根因判断</small>
+                <strong>Failure</strong>
+                <small>红色基线</small>
               </button>
               <button class="trace-node" type="button" data-trace-node="tool" aria-pressed="false">
                 <span>03</span>
-                <strong>MCP</strong>
-                <small>工具结果</small>
+                <strong>Patch</strong>
+                <small>五文件修复</small>
               </button>
               <button
                 class="trace-node"
@@ -178,8 +178,8 @@
                 aria-pressed="false"
               >
                 <span>04</span>
-                <strong>Approval</strong>
-                <small>人工门禁</small>
+                <strong>PR</strong>
+                <small>安全交付</small>
               </button>
               <button
                 class="trace-node"
@@ -188,30 +188,30 @@
                 aria-pressed="false"
               >
                 <span>05</span>
-                <strong>Verified</strong>
-                <small>CI 证据</small>
+                <strong>CI</strong>
+                <small>绿色验证</small>
               </button>
             </div>
 
             <div class="trace-detail" data-trace-detail aria-live="polite">
               <div class="trace-detail-meta">
                 <span data-trace-type>INPUT</span>
-                <time data-trace-time>10:15:02.184</time>
+                <time data-trace-time>PUBLIC</time>
               </div>
-              <h2 data-trace-title>GitHub Issue #1 已进入维护队列</h2>
+              <h2 data-trace-title>GitHub Issue #3 定义了并发重放缺陷</h2>
               <p data-trace-copy>
-                Webhook HMAC 验签通过；delivery ID 已登记。执行策略锁定为
-                <code>pull_request_only</code>。
+                同一 GitHub delivery 并发重试时创建两个维护任务。Issue 给出公开基线、失败
+                CI、验收标准和 <code>pull_request_only</code> 安全边界。
               </p>
               <div class="hash-row">
-                <span>PREV <code data-trace-prev>GENESIS</code></span>
-                <span>CHAIN <code data-trace-hash>4f8ab21e…9c12</code></span>
+                <span>BASE <code data-trace-prev>7c117e9</code></span>
+                <span>PROOF <code data-trace-hash>ISSUE #3 · OPEN</code></span>
               </div>
             </div>
 
             <div class="recorder-foot">
-              <span>TRACE 332f8652f35d</span>
-              <span>CHAIN VERIFIED</span>
+              <span>COMMIT a215065</span>
+              <span>PR #4 · OPEN · CI PASS</span>
             </div>
           </div>
         </div>
@@ -371,13 +371,15 @@
         <div class="section-shell">
           <div class="section-heading reveal">
             <div>
-              <div class="section-index">02 / INTERACTIVE DEMO</div>
-              <p class="section-kicker">Issue → Agent handoffs → multi-file patch → verified PR</p>
-              <h2 id="demo-title">一次看清复杂修复如何安全落地</h2>
+              <div class="section-index">02 / PUBLIC ISSUE → PR</div>
+              <p class="section-kicker">
+                One public defect, five changed files, one open pull request
+              </p>
+              <h2 id="demo-title">从真实 Issue 一路追到绿色 PR</h2>
             </div>
             <p>
-              先通过复合场景观察五个文件如何共同解决 webhook 重放，再切换到已验证 Run 核对真实
-              PR、CI 与 16 条 Evidence。两种视图都无需模型服务或管理员账号。
+              默认回放公开测试床中的 Issue #3：红色基线稳定复现并发竞态，RepoPilot
+              通过五文件补丁完成修复，CI 转绿后创建 PR #4，并在人工合并门禁前停止。
             </p>
           </div>
 
@@ -389,18 +391,18 @@
               aria-selected="true"
               data-demo-mode="scenario"
             >
-              <span>SCENARIO</span>
-              <strong>复合场景演练</strong>
-              <small>并发 webhook 幂等修复 · 5 files</small>
+              <span>PUBLIC DELIVERY</span>
+              <strong>Issue #3 → PR #4</strong>
+              <small>失败 CI → 五文件修复 → 绿色 CI</small>
             </button>
             <button type="button" role="tab" aria-selected="false" data-demo-mode="verified">
-              <span>VERIFIED</span>
-              <strong>已验证 Run #1</strong>
-              <small>真实 PR #2 · 16 evidence</small>
+              <span>HISTORICAL</span>
+              <strong>历史最小案例</strong>
+              <small>Issue #1 → 一行补丁 → PR #2</small>
             </button>
             <p data-demo-disclosure>
-              演练内容取自 RepoPilot 当前真实实现与测试，用于完整展示多 Agent
-              协作；右侧模式提供可外部核验的线上 Run。
+              主模式中的 Issue、失败基线、提交、CI 和 PR 均来自公开的
+              repopilot-testbed；每个关键结果都能跳转到 GitHub 核验。
             </p>
           </div>
 
@@ -409,14 +411,16 @@
               <div>
                 <span class="demo-live-mark" aria-hidden="true"></span>
                 <div>
-                  <small data-demo-run-kind>INTERACTIVE SCENARIO</small>
-                  <strong data-demo-repository>wellkilo/RepoPilot · Webhook replay incident</strong>
+                  <small data-demo-run-kind>PUBLIC ISSUE → PR · EXTERNALLY VERIFIABLE</small>
+                  <strong data-demo-repository
+                    >wellkilo/repopilot-testbed · Issue #3 → PR #4</strong
+                  >
                 </div>
               </div>
               <div class="demo-run-facts" aria-label="运行摘要">
                 <span>POLICY <strong>PR ONLY</strong></span>
                 <span data-demo-files>5 FILES</span>
-                <span class="is-success" data-demo-run-status>READY TO REPLAY</span>
+                <span class="is-success" data-demo-run-status>CI PASSED · PR OPEN</span>
               </div>
             </header>
 
@@ -442,21 +446,21 @@
               <div class="demo-brief">
                 <div class="demo-scene-meta">
                   <span data-demo-owner>REPO LEAD</span>
-                  <strong data-demo-status>INCIDENT ACCEPTED</strong>
+                  <strong data-demo-status>ISSUE ACCEPTED</strong>
                 </div>
-                <h3 data-demo-title>同一 webhook 被并发投递两次</h3>
+                <h3 data-demo-title>Issue #3：重复 webhook 创建两个维护任务</h3>
                 <p data-demo-copy>
-                  GitHub 重试触发两个相同 delivery。RepoPilot 接受任务，但必须证明最终只创建一个
-                  Run、一次 AgentTeams dispatch 和一条输入证据。
+                  公开 Issue 给出故障分支、失败 CI、复现命令和七条验收标准。RepoPilot
+                  将执行策略锁定为 pull_request_only。
                 </p>
                 <dl class="demo-evidence-grid">
                   <div>
                     <dt>EVIDENCE</dt>
-                    <dd data-demo-evidence>01 · task_input</dd>
+                    <dd data-demo-evidence>01 · GitHub Issue #3</dd>
                   </div>
                   <div>
                     <dt>ARTIFACT</dt>
-                    <dd data-demo-artifact>Webhook delivery</dd>
+                    <dd data-demo-artifact>Issue #3 · OPEN</dd>
                   </div>
                   <div>
                     <dt>BOUNDARY</dt>
@@ -496,24 +500,24 @@
               <aside class="demo-proof-rail">
                 <div class="demo-proof-head">
                   <span>LIVE EVIDENCE</span>
-                  <strong data-demo-proof-count>01 / 20</strong>
+                  <strong data-demo-proof-count>01 / 08</strong>
                 </div>
                 <ol data-demo-proof-list>
                   <li class="is-complete">
                     <span>01</span>
-                    <p>Webhook 验签通过</p>
+                    <p>Issue #3 已创建</p>
                   </li>
                   <li>
                     <span>02</span>
-                    <p>等待 Agent 分诊</p>
+                    <p>等待失败基线</p>
                   </li>
                   <li>
                     <span>03</span>
-                    <p>等待根因证据</p>
+                    <p>等待五文件补丁</p>
                   </li>
                   <li>
                     <span>04</span>
-                    <p>等待验证结果</p>
+                    <p>等待绿色 PR</p>
                   </li>
                 </ol>
                 <div class="demo-policy-gate" data-demo-policy-state="locked">
@@ -526,7 +530,7 @@
 
             <div class="demo-run-log">
               <span data-demo-terminal-label>event://github/issues.opened</span>
-              <code data-demo-log>delivery 7e91…c8a4 received twice · deduplication required</code>
+              <code data-demo-log>repopilot-testbed#3 · policy pull_request_only · OPEN</code>
             </div>
 
             <footer class="demo-console-foot">
@@ -537,7 +541,7 @@
                 <span data-demo-play-icon>▶</span>
                 <span data-demo-play-label>播放完整演示</span>
               </button>
-              <span class="demo-chain" data-demo-chain>SCENARIO · CURRENT IMPLEMENTATION</span>
+              <span class="demo-chain" data-demo-chain>8 EVIDENCE STEPS · PR #4 OPEN</span>
             </footer>
           </div>
 
@@ -549,13 +553,13 @@
             </article>
             <article>
               <strong>5 files</strong>
-              <span>跨层幂等修复</span>
-              <small>Route + Schema + Store + Service + Test</small>
+              <span>公开 PR 补丁</span>
+              <small>Types + Store + Processor + Tests + Docs</small>
             </article>
             <article>
-              <strong>2 → 1</strong>
-              <span>并发投递收敛</span>
-              <small>One Run · One dispatch · One evidence</small>
+              <strong>7 / 7</strong>
+              <span>回归测试通过</span>
+              <small>Concurrent · sequential · negative control</small>
             </article>
             <article>
               <strong>PR ONLY</strong>
@@ -567,10 +571,10 @@
           <div class="demo-video-card reveal" data-delay="190">
             <div>
               <span class="section-kicker">Recorded walkthrough</span>
-              <h3>不到半分钟，看完从故障到 Verified PR</h3>
+              <h3>不到半分钟，看完从故障到可验证 PR</h3>
               <p>
-                视频按实际操作顺序展示 Agent 接力、多文件补丁、并发回归测试、Evidence
-                累积与人工合并门禁；可全屏播放，也可下载 MP4 用于路演。
+                视频按真实 Issue #3 的交付顺序展示失败 CI、Agent 接力、五文件补丁、绿色 CI、PR #4
+                与人工合并门禁。
               </p>
               <a href="./assets/demo/repopilot-agentteam-demo.mp4" download>下载高清 MP4 ↓</a>
             </div>
@@ -587,23 +591,34 @@
           </div>
 
           <div class="demo-links reveal" data-delay="220">
-            <span>核验真实 Run</span>
+            <span>逐项核验公开交付</span>
             <a
-              href="https://github.com/wellkilo/repopilot-testbed/pull/2"
+              href="https://github.com/wellkilo/repopilot-testbed/issues/3"
               target="_blank"
               rel="noreferrer"
             >
-              Pull Request #2 ↗
+              Issue #3 ↗
             </a>
             <a
-              href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31793190761"
+              href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444544920"
               target="_blank"
               rel="noreferrer"
             >
-              CI Run 31793190761 ↗
+              Failing CI ↗
             </a>
-            <a href="https://github.com/wellkilo/RepoPilot" target="_blank" rel="noreferrer">
-              RepoPilot Source ↗
+            <a
+              href="https://github.com/wellkilo/repopilot-testbed/pull/4"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Pull Request #4 ↗
+            </a>
+            <a
+              href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444690068"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Passing CI ↗
             </a>
           </div>
         </div>
@@ -890,12 +905,12 @@
         <div class="section-heading reveal">
           <div>
             <div class="section-index">07 / PROOF</div>
-            <p class="section-kicker">A deterministic fix, verified by GitHub Actions</p>
-            <h2 id="proof-title">真实 Issue、最小补丁与绿色 CI</h2>
+            <p class="section-kicker">A reproducible race, a focused patch, a green pull request</p>
+            <h2 id="proof-title">每个结论，都能回到公开证据</h2>
           </div>
           <p>
-            合法的 <code>score = 0</code> 被 <code>|| 1</code> 错误回退。RepoPilot
-            只改一处运算符，并由独立 Verifier 与 GitHub Actions 共同验证。
+            同一 delivery 的并发重试曾创建两个维护任务。失败基线、五文件补丁、回归测试和 Pull
+            Request 均保留在公开测试床中，可独立复现与审查。
           </p>
         </div>
 
@@ -903,25 +918,25 @@
           <article class="issue-window reveal">
             <div class="window-bar">
               <span></span><span></span><span></span>
-              <strong>wellkilo/repopilot-testbed · Issue #1</strong>
+              <strong>wellkilo/repopilot-testbed · Issue #3</strong>
             </div>
             <div class="window-body">
               <div class="issue-state">OPEN</div>
-              <h3>Zero evaluation scores are normalized to one</h3>
+              <h3>Duplicate webhook retries dispatch multiple maintenance tasks</h3>
               <p>
-                <code>normalizeEvaluation</code> 把合法的 0 分改写为 1
-                分，可能把失败的策略评估标记为成功。
+                两个相同 <code>deliveryId</code> 的并发请求都在 <code>find</code> /
+                <code>save</code> 窗口内穿透，最终创建两个 task 并执行两次 dispatch。
               </p>
-              <div class="diff-block" aria-label="最小补丁">
-                <span>- score: result.score <strong>|| 1</strong></span>
-                <span>+ score: result.score <strong>?? 1</strong></span>
+              <div class="diff-block" aria-label="关键修复">
+                <span>- await store.<strong>find</strong>(deliveryId)</span>
+                <span>+ return store.<strong>getOrCreate</strong>(deliveryId, createTask)</span>
               </div>
               <a
-                href="https://github.com/wellkilo/repopilot-testbed/issues/1"
+                href="https://github.com/wellkilo/repopilot-testbed/issues/3"
                 target="_blank"
                 rel="noreferrer"
               >
-                打开真实 Issue（需 GitHub 登录）
+                打开公开 Issue #3
                 <span aria-hidden="true">↗</span>
               </a>
             </div>
@@ -929,50 +944,57 @@
 
           <div class="proof-evidence">
             <article class="proof-card reveal" data-delay="80">
-              <span class="proof-label">PULL REQUEST #2</span>
-              <strong>Open · clean · focused</strong>
+              <span class="proof-label">FAILING BASELINE</span>
+              <strong>竞态稳定复现</strong>
               <div class="check-list">
-                <span class="is-pass">1 file</span>
-                <span class="is-pass">+1 / -1</span>
-                <span class="is-pass">not auto-merged</span>
+                <span class="is-pass">typecheck pass</span>
+                <span class="is-pass">target test fails</span>
+                <span class="is-pass">commit 7c117e9</span>
               </div>
               <a
-                href="https://github.com/wellkilo/repopilot-testbed/pull/2"
+                href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444544920"
                 target="_blank"
                 rel="noreferrer"
               >
-                查看 Pull Request（需 GitHub 登录）
+                查看失败 CI Run 32444544920
                 <span aria-hidden="true">↗</span>
               </a>
             </article>
 
             <article class="proof-card reveal" data-delay="150">
-              <span class="proof-label">GITHUB ACTIONS</span>
-              <strong data-ci-title>CI run completed successfully</strong>
+              <span class="proof-label">PULL REQUEST #4</span>
+              <strong>Open · clean · human-gated</strong>
               <div class="check-list">
-                <span class="is-pass">npm ci</span>
-                <span class="is-pass">typecheck</span>
-                <span class="is-pass">test</span>
+                <span class="is-pass">5 files</span>
+                <span class="is-pass">+75 / -22</span>
+                <span class="is-pass">not auto-merged</span>
               </div>
               <a
-                href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31793190761"
+                href="https://github.com/wellkilo/repopilot-testbed/pull/4"
                 target="_blank"
                 rel="noreferrer"
               >
-                查看 CI Run 31793190761（需 GitHub 登录）
+                查看 Pull Request #4
                 <span aria-hidden="true">↗</span>
               </a>
             </article>
 
-            <article class="proof-card proof-card-live reveal" data-delay="220">
-              <span class="proof-label">LIVE REPOSITORY</span>
-              <strong data-repo-status>Public · Apache-2.0</strong>
-              <div class="repo-stats">
-                <div><span data-stars>0</span><small>Stars</small></div>
-                <div><span data-forks>0</span><small>Forks</small></div>
-                <div><span data-open-issues>—</span><small>Open issues</small></div>
+            <article class="proof-card reveal" data-delay="220">
+              <span class="proof-label">PASSING CI</span>
+              <strong data-ci-title>7 / 7 tests passed</strong>
+              <div class="check-list">
+                <span class="is-pass">concurrent retry</span>
+                <span class="is-pass">sequential retry</span>
+                <span class="is-pass">different IDs</span>
               </div>
-              <span class="live-source" data-live-source>静态证据已加载</span>
+              <a
+                href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444690068"
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看绿色 CI Run 32444690068
+                <span aria-hidden="true">↗</span>
+              </a>
             </article>
           </div>
         </div>

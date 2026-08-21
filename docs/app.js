@@ -1,95 +1,100 @@
 const traceData = {
   input: {
     type: "INPUT",
-    time: "18:10:46",
-    title: "GitHub Issue #1 已进入维护队列",
-    copy: "Webhook HMAC 验签通过；delivery ID 已登记。执行策略锁定为 pull_request_only。",
-    prev: "GENESIS",
-    hash: "1186ee63…7969c0"
+    time: "PUBLIC",
+    title: "GitHub Issue #3 定义了并发重放缺陷",
+    copy: "Issue 给出公开基线、失败 CI、复现命令、七条验收标准和 pull_request_only 安全边界。",
+    prev: "BASE 7c117e9",
+    hash: "ISSUE #3 · OPEN"
   },
   decision: {
-    type: "DECISION",
-    time: "18:14:09",
-    title: "Locator 证明 score=0 被 truthiness fallback 改写",
-    copy: "基线复现仅失败一条目标回归用例；根因锁定为 result.score || 1，影响面限定在 evaluation normalization。",
-    prev: "EVIDENCE #02",
-    hash: "VERIFIED IN LEDGER"
+    type: "FAILING CI",
+    time: "RUN 32444544920",
+    title: "并发回归稳定得到两个不同 task ID",
+    copy: "基线类型检查通过，只有 concurrent retry 用例失败；两个请求在 find/save 之间同时穿透。",
+    prev: "ISSUE #3",
+    hash: "CONCLUSION · FAILURE"
   },
   tool: {
-    type: "TOOL RESULT",
-    time: "18:18:32",
-    title: "Fixer 提交一行最小补丁",
-    copy: "result.score || 1 被替换为 result.score ?? 1；提交 dd67868d 只修改一个文件，保留合法的零分。",
-    prev: "EVIDENCE #08",
-    hash: "COMMIT dd67868d"
+    type: "PATCH",
+    time: "COMMIT a215065",
+    title: "Fixer 交付五文件幂等补丁",
+    copy: "Types、Store、Processor、Tests 与 README 共同约束同 delivery 共享一个 in-flight creation。",
+    prev: "BASE 7c117e9",
+    hash: "5 FILES · +75 / -22"
   },
   approval: {
-    type: "POLICY",
-    time: "18:20:05",
-    title: "自治在 Pull Request 处停止",
-    copy: "PR #2 已创建并保持 OPEN。系统没有执行 merge、delete branch、force push 或权限修改。",
-    prev: "EVIDENCE #12",
-    hash: "PR #2 · OPEN"
+    type: "PULL REQUEST",
+    time: "PR #4",
+    title: "修复已进入 PR，合并仍由人类决定",
+    copy: "PR #4 以故障基线为 base，状态 OPEN / CLEAN；未执行 merge、delete branch、force push 或权限修改。",
+    prev: "COMMIT a215065",
+    hash: "PR #4 · OPEN"
   },
   verified: {
     type: "CI RESULT",
-    time: "18:23:41",
-    title: "Verifier 确认 GitHub Actions 全部通过",
-    copy: "npm ci、typecheck 与测试均为 SUCCESS。Run 以 16 条 Evidence 完成，证据链校验有效。",
-    prev: "EVIDENCE #15",
-    hash: "CHAIN VALID"
+    time: "RUN 32444690068",
+    title: "Verifier 确认 7 个测试与类型检查通过",
+    copy: "并发同 ID、顺序重试和不同 ID 负对照全部通过。GitHub Actions 结论为 SUCCESS。",
+    prev: "PR #4",
+    hash: "CI SUCCESS · PR OPEN"
   }
 };
 
 const demoModes = {
   scenario: {
-    runKind: "INTERACTIVE SCENARIO · CURRENT IMPLEMENTATION",
-    repository: "wellkilo/RepoPilot · Webhook replay incident",
+    runKind: "PUBLIC ISSUE → PR · EXTERNALLY VERIFIABLE",
+    repository: "wellkilo/repopilot-testbed · Issue #3 → PR #4",
     fileSummary: "5 FILES",
-    runStatus: "READY TO REPLAY",
+    runStatus: "CI PASSED · PR OPEN",
     disclosure:
-      "演练内容取自 RepoPilot 当前真实实现与测试，用于完整展示多 Agent 协作；右侧模式提供可外部核验的线上 Run。",
-    chain: "SCENARIO · CURRENT IMPLEMENTATION",
-    playLabel: "播放完整演示",
+      "Issue、失败基线、修复提交、CI 和 PR 均可在 GitHub 核验；Agent 交接是依据这些公开产物构建的确定性流程回放。",
+    chain: "8 EVIDENCE STEPS · PR #4 OPEN",
+    playLabel: "播放 Issue → PR",
     outcomes: [
       ["5", "Agent 职责隔离", "Lead → Locator → Fixer → Verifier → Archivist"],
-      ["5 files", "跨层幂等修复", "Route + Schema + Store + Service + Test"],
-      ["2 → 1", "并发投递收敛", "One Run · One dispatch · One evidence"],
+      ["5 files", "公开 PR 补丁", "Types + Store + Processor + Tests + Docs"],
+      ["7 / 7", "回归测试通过", "Concurrent · sequential · negative control"],
       ["PR ONLY", "自治安全边界", "Merge remains human-controlled"]
     ],
     steps: [
       {
         label: "Issue",
-        caption: "接收事件",
+        caption: "公开输入",
         owner: "REPO LEAD",
         agent: "lead",
-        status: "INCIDENT ACCEPTED",
-        title: "同一 webhook 被并发投递两次",
-        copy: "GitHub 重试触发两个相同 delivery。RepoPilot 接受任务，但必须证明最终只创建一个 Run、一次 AgentTeams dispatch 和一条输入证据。",
-        evidence: "01 · task_input",
-        artifact: "Webhook delivery",
+        status: "ISSUE ACCEPTED",
+        title: "Issue #3：重复 webhook 创建两个维护任务",
+        copy: "公开 Issue 给出故障分支、失败 CI、复现命令和七条验收标准。流程策略锁定为 pull_request_only。",
+        evidence: "01 · GitHub Issue #3",
+        artifact: "Issue #3 · OPEN",
         boundary: "PR only",
-        changeSummary: "2 deliveries · same ID",
-        terminalLabel: "event://github/issues.opened",
-        log: "delivery 7e91…c8a4 received twice · deduplication required",
-        proofCount: "01 / 20",
+        changeSummary: "public source · 7 criteria",
+        terminalLabel: "github://issues/3",
+        log: "repopilot-testbed#3 · policy pull_request_only · OPEN",
+        proofCount: "01 / 08",
         proof: [
-          ["done", "Webhook 验签通过"],
-          ["next", "等待 Agent 分诊"],
-          ["next", "等待根因证据"],
-          ["next", "等待验证结果"]
+          ["done", "Issue #3 已创建"],
+          ["next", "等待失败基线"],
+          ["next", "等待五文件补丁"],
+          ["next", "等待绿色 PR"]
         ],
         gateTitle: "MERGE LOCKED",
         gateCopy: "系统可创建 PR，但不能自行合并。",
         files: [
           {
-            label: "incident.json",
-            code: `{
-  "delivery": "7e91…c8a4",
-  "attempts": 2,
-  "expectedRuns": 1,
-  "policy": "pull_request_only"
-}`
+            label: "issue-3.md",
+            code: `Symptom:
+same GitHub delivery → two maintenance tasks
+
+Acceptance:
+✓ same taskId
+✓ one newlyCreated result
+✓ one stored task
+✓ one dispatch
+✓ sequential retry remains idempotent
+✓ different delivery IDs stay independent
+✓ typecheck + tests pass`
           }
         ]
       },
@@ -98,18 +103,18 @@ const demoModes = {
         caption: "建立验收",
         owner: "REPO LEAD",
         agent: "lead",
-        status: "DAG DISPATCHED",
-        title: "把重复触发拆成三个可证明条件",
-        copy: "Repo Lead 不直接改代码，而是定义验收标准：相同 delivery ID 返回同一 Run、只写一条 input evidence，并且只向 AgentTeams 分发一次。",
-        evidence: "03 · decision",
-        artifact: "Acceptance DAG",
+        status: "ACCEPTANCE LOCKED",
+        title: "把 Issue 拆成可独立验证的任务 DAG",
+        copy: "Repo Lead 将任务拆为并发复现、竞态定位、原子去重、负对照验证和 PR 交付；Fixer 在根因证明前不写代码。",
+        evidence: "02 · Acceptance DAG",
+        artifact: "Issue #3 criteria",
         boundary: "Lead cannot patch",
-        changeSummary: "3 acceptance checks",
+        changeSummary: "5 tasks · 1 human gate",
         terminalLabel: "agentteams://project/replay-guard",
         log: "Lead → Locator · reproduce concurrency before authoring patch",
-        proofCount: "03 / 20",
+        proofCount: "02 / 08",
         proof: [
-          ["done", "任务输入已固化"],
+          ["done", "Issue 输入已固化"],
           ["done", "验收标准已拆解"],
           ["next", "Locator 复现并发"],
           ["next", "Fixer 等待证据"]
@@ -120,9 +125,13 @@ const demoModes = {
           {
             label: "acceptance.md",
             code: `Concurrent duplicate delivery:
-✓ same run ID
-✓ one input evidence
-✓ one Matrix dispatch
+✓ same task ID
+✓ one stored task
+✓ one dispatch
+
+Negative controls:
+✓ sequential retry
+✓ different delivery IDs
 
 Forbidden:
 merge · force push · secret change`
@@ -135,19 +144,19 @@ merge · force push · secret change`
         owner: "LOCATOR",
         agent: "locator",
         status: "RACE REPRODUCED",
-        title: "应用层先查后写无法阻止并发穿透",
-        copy: "Locator 并发发送两次相同 delivery，并确认普通查询与插入之间存在竞态窗口。影响范围被限定在 Run 创建和后续 dispatch。",
-        evidence: "07 · root_cause",
-        artifact: "Concurrency trace",
+        title: "先 find 后 save 的异步窗口允许两个请求穿透",
+        copy: "Locator 在公开基线提交 7c117e9 上运行 Promise.all。类型检查和旧测试通过，只有同 delivery 并发重试返回两个不同 task ID。",
+        evidence: "03 · Failing CI",
+        artifact: "Run 32444544920",
         boundary: "Read-only analysis",
         changeSummary: "TOCTOU window found",
-        terminalLabel: "reproduction.log",
-        log: "Promise.all([delivery, delivery]) → run A + run B · FAIL",
-        proofCount: "07 / 20",
+        terminalLabel: "github-actions://32444544920",
+        log: "typecheck PASS · 4 tests PASS · concurrent retry FAIL",
+        proofCount: "03 / 08",
         proof: [
-          ["done", "并发失败已复现"],
+          ["done", "失败 CI 已公开"],
           ["done", "竞态窗口已定位"],
-          ["done", "影响面限定完成"],
+          ["done", "其他测试保持通过"],
           ["next", "Fixer 准备跨层补丁"]
         ],
         gateTitle: "WRITE SCOPED",
@@ -155,58 +164,56 @@ merge · force push · secret change`
         files: [
           {
             label: "race.log",
-            code: `delivery=7e91…c8a4
-request A  SELECT → empty
-request B  SELECT → empty
-request A  INSERT → run-a
-request B  INSERT → run-b
+            code: `delivery=delivery-issue-42
+request A  find → empty
+request B  find → empty
+request A  save → task-a
+request B  save → task-b
 
 dispatches: 2   expected: 1`
           },
           {
-            label: "impact.txt",
-            code: `Affected:
-  runs.delivery_id
-  RepoPilotStore.createRun
-  RunService.createAndDispatch
+            label: "processor.ts",
+            code: `const existing = await store.find(deliveryId);
+if (existing) return existing;
 
-Not affected:
-  approvals · evidence hashing · MCP`
+await Promise.resolve(); // race window
+
+await store.save(task);
+await dispatchTask(task);`
           }
         ]
       },
       {
-        label: "Schema",
-        caption: "数据库护栏",
+        label: "Types",
+        caption: "明确契约",
         owner: "FIXER",
         agent: "fixer",
-        status: "CONSTRAINT ADDED",
-        title: "让 delivery ID 在数据库层保持唯一",
-        copy: "Fixer 先把不可重复约束下沉到 PostgreSQL，避免多个进程或未来的新入口绕过应用层检查。",
-        evidence: "10 · patch",
-        artifact: "001_init.sql",
-        boundary: "No destructive migration",
-        changeSummary: "+ unique constraint",
-        terminalLabel: "patch://schema",
-        log: "database invariant added · delivery_id UNIQUE",
-        proofCount: "10 / 20",
+        status: "RESULT TYPED",
+        title: "创建或复用的结果先进入类型契约",
+        copy: "Fixer 新增 StoredTaskResult，明确返回 task 与 newlyCreated；Processor 不再猜测 Store 是否发生创建。",
+        evidence: "04 · Patch contract",
+        artifact: "src/webhooks/types.ts",
+        boundary: "No API expansion",
+        changeSummary: "+ StoredTaskResult",
+        terminalLabel: "patch://types.ts",
+        log: "contract added · task + newlyCreated",
+        proofCount: "04 / 08",
         proof: [
           ["done", "根因证据已关联"],
-          ["done", "Schema 约束已加入"],
+          ["done", "返回契约已显式化"],
           ["next", "Store 原子化处理中"],
           ["next", "回归测试待执行"]
         ],
         gateTitle: "MERGE LOCKED",
-        gateCopy: "Schema 变更仍只能进入 Pull Request。",
+        gateCopy: "类型改动仍只能进入 Pull Request。",
         files: [
           {
-            label: "001_init.sql",
-            code: ` CREATE TABLE runs (
-   id UUID PRIMARY KEY,
--  delivery_id TEXT,
-+  delivery_id TEXT UNIQUE,
-   execution_policy TEXT NOT NULL
- );`
+            label: "types.ts",
+            code: `+ export interface StoredTaskResult {
++   task: MaintenanceTask;
++   newlyCreated: boolean;
++ }`
           }
         ]
       },
@@ -215,94 +222,76 @@ Not affected:
         caption: "原子去重",
         owner: "FIXER",
         agent: "fixer",
-        status: "ATOMIC DEDUP",
-        title: "同一 delivery 在事务锁内复用已有 Run",
-        copy: "Store 使用事务级 advisory lock 串行化相同 delivery，再返回 newlyCreated 标记；已有 Run 不会再次追加 input evidence。",
-        evidence: "12 · tool_result",
-        artifact: "db.ts",
+        status: "IN-FLIGHT DEDUP",
+        title: "相同 delivery 共享一个 in-flight Promise",
+        copy: "Store 将 create-or-reuse 收口为 getOrCreate。并发重试等待同一 creation；完成后的任务用于顺序重试，finally 保证清理 in-flight。",
+        evidence: "05 · Store patch",
+        artifact: "src/webhooks/store.ts",
         boundary: "Idempotent write",
-        changeSummary: "+ transaction lock",
+        changeSummary: "+ getOrCreate",
         terminalLabel: "patch://store",
-        log: "same delivery → same run ID · evidence append executed once",
-        proofCount: "12 / 20",
+        log: "same delivery → shared Promise → same task ID",
+        proofCount: "05 / 08",
         proof: [
-          ["done", "唯一约束已生效"],
-          ["done", "事务锁已加入"],
-          ["done", "existing Run 可复用"],
-          ["next", "检查 dispatch 门禁"]
+          ["done", "已完成任务可复用"],
+          ["done", "in-flight creation 可共享"],
+          ["done", "finally 清理 pending 状态"],
+          ["next", "Processor 接入契约"]
         ],
         gateTitle: "FORCE PUSH BLOCKED",
         gateCopy: "Fixer 只能推送非保护分支。",
         files: [
           {
-            label: "db.ts",
-            code: `await transaction\`
-  SELECT pg_advisory_xact_lock(
-    hashtext(\${deliveryId})
-  )
-\`;
+            label: "store.ts",
+            code: `const pending = inFlight.get(deliveryId);
+if (pending) {
+  const result = await pending;
+  return { task: result.task, newlyCreated: false };
+}
 
-const existing = await transaction\`
-  SELECT * FROM runs
-  WHERE delivery_id = \${deliveryId}
-\`;
-
-return existing[0]
-  ? { ...existing[0], newly_created: false }
-  : insertRun();`
+const creation = createTask()
+  .then((task) => {
+    tasks.set(deliveryId, task);
+    return { task, newlyCreated: true };
+  })
+  .finally(() => inFlight.delete(deliveryId));`
           }
         ]
       },
       {
-        label: "Dispatch",
-        caption: "阻止重派",
+        label: "Processor",
+        caption: "一次副作用",
         owner: "FIXER",
         agent: "fixer",
         status: "SIDE EFFECT GUARDED",
-        title: "重复请求在调用 GitHub 与 Matrix 前返回",
-        copy: "Service 读取 newlyCreated。重复 delivery 直接返回已有 Run，不再读取上下文、不再发 Matrix 消息，也不产生第二组外部副作用。",
-        evidence: "14 · patch",
-        artifact: "run-service.ts",
+        title: "创建 task 与 dispatch 进入同一个原子工厂",
+        copy: "Processor 把 task 创建和 dispatch 作为 getOrCreate 的 factory。只有首个请求执行 factory，所有重试只复用结果。",
+        evidence: "06 · Processor patch",
+        artifact: "src/webhooks/processor.ts",
         boundary: "One external write",
-        changeSummary: "+ early return",
-        terminalLabel: "patch://service",
-        log: "duplicate delivery short-circuited before GitHub + Matrix calls",
-        proofCount: "14 / 20",
+        changeSummary: "- find/save · + factory",
+        terminalLabel: "patch://processor.ts",
+        log: "one creation · one dispatch · shared result",
+        proofCount: "06 / 08",
         proof: [
           ["done", "Store 幂等完成"],
-          ["done", "dispatch 副作用已门禁"],
-          ["done", "重复请求提前返回"],
+          ["done", "dispatch 纳入原子工厂"],
+          ["done", "重复请求复用 Promise"],
           ["next", "Verifier 独立执行"]
         ],
         gateTitle: "MERGE LOCKED",
         gateCopy: "补丁完成不等于允许合并。",
         files: [
           {
-            label: "run-service.ts",
-            code: `const run = await this.store.createRun(
-  input,
-  { deliveryId }
-);
-
-if (!run.newlyCreated) {
-  return run;
-}
-
-const context = await resolveSourceContext();
-await matrix.dispatchTask(context);`
-          },
-          {
-            label: "app.ts",
-            code: `const deliveryId =
-  request.headers["x-github-delivery"];
-
-const run = await runService
-  .createAndDispatch(input, deliveryId);
-
-return reply.code(202).send({
-  accepted: true,
-  run
-});`
+            label: "processor.ts",
+            code: `return store.getOrCreate(
+  delivery.deliveryId,
+  async () => {
+    const task = createTask(delivery);
+    await dispatchTask(task);
+    return task;
+  }
+);`
           }
         ]
       },
@@ -312,44 +301,47 @@ return reply.code(202).send({
         owner: "VERIFIER",
         agent: "verifier",
         status: "ALL GATES PASS",
-        title: "两次并发请求只留下一个 Run 和一条输入证据",
-        copy: "Verifier 通过 Promise.all 制造竞争，并分别检查 Run ID、newlyCreated 结果和 evidence 数量；随后执行类型检查、单测、lint 与构建。",
-        evidence: "18 · verification",
-        artifact: "db.integration.test.ts",
+        title: "7 个测试覆盖并发、顺序重试和不同 ID",
+        copy: "Verifier 重放失败用例，并增加顺序 retry 与不同 delivery 并行作为负对照。GitHub Actions Run 32444690068 全绿。",
+        evidence: "07 · Passing CI",
+        artifact: "Run 32444690068",
         boundary: "Verifier cannot edit",
-        changeSummary: "concurrency test passes",
-        terminalLabel: "verify://quality-gates",
-        log: "typecheck ✓  unit ✓  integration ✓  lint ✓  build ✓",
-        proofCount: "18 / 20",
+        changeSummary: "7 / 7 tests passed",
+        terminalLabel: "github-actions://32444690068",
+        log: "npm ci ✓ · typecheck ✓ · 7 tests ✓",
+        proofCount: "07 / 08",
         proof: [
           ["done", "并发回归通过"],
-          ["done", "Evidence 数量为 1"],
-          ["done", "完整质量门通过"],
+          ["done", "顺序 retry 通过"],
+          ["done", "不同 ID 负对照通过"],
           ["next", "生成可审查 PR"]
         ],
         gateTitle: "CHAIN VERIFIED",
         gateCopy: "Verifier 只签发结论，不能修改补丁。",
         files: [
           {
-            label: "db.integration.test.ts",
+            label: "processor.test.ts",
             code: `const [first, second] = await Promise.all([
-  store.createRun(input, { deliveryId }),
-  store.createRun(input, { deliveryId })
+  processor.process(delivery),
+  processor.process(delivery)
 ]);
 
-expect(first.id).toBe(second.id);
+expect(first.task.taskId)
+  .toBe(second.task.taskId);
 expect([first.newlyCreated, second.newlyCreated])
-  .toEqual(expect.arrayContaining([true, false]));
-expect(await inputEvidence(first.id))
-  .toHaveLength(1);`
+  .toEqual([false, true].sort());
+expect(store.size()).toBe(1);
+expect(dispatchTask).toHaveBeenCalledOnce();`
           },
           {
             label: "checks.log",
-            code: `pnpm typecheck     PASS
-pnpm test          PASS
-integration        PASS
-pnpm lint          PASS
-pnpm build         PASS`
+            code: `GitHub Actions Run 32444690068
+
+npm ci              SUCCESS
+npm run typecheck   SUCCESS
+npm test            7 PASSED
+
+Conclusion: SUCCESS`
           }
         ]
       },
@@ -358,44 +350,47 @@ pnpm build         PASS`
         caption: "安全停靠",
         owner: "REPO LEAD + ARCHIVIST",
         agent: "archivist",
-        status: "READY FOR REVIEW",
-        title: "修复进入 PR，合并权仍由人类持有",
-        copy: "系统汇总五文件补丁、验证结论和回滚点，生成可审查交付；Archivist 只沉淀已经验证的幂等规则，merge 操作保持锁定。",
-        evidence: "20 · runbook",
-        artifact: "Scenario result",
+        status: "PR OPEN / CLEAN",
+        title: "PR #4 已创建并保持 OPEN",
+        copy: "PR #4 包含五文件、+75/-22、提交 a215065 和绿色 CI。它关联 Issue #3，但合并权仍由人类持有。",
+        evidence: "08 · Pull Request #4",
+        artifact: "PR #4 · OPEN",
         boundary: "Human merge only",
-        changeSummary: "5 files · 5 gates",
-        terminalLabel: "handoff://verified-pr",
-        log: "PR package ready · merge_pull_request requires explicit approval",
-        proofCount: "20 / 20",
+        changeSummary: "5 files · +75 / -22",
+        terminalLabel: "github://pull/4",
+        log: "PR #4 OPEN · CLEAN · CI SUCCESS · merge locked",
+        proofCount: "08 / 08",
         proof: [
-          ["done", "任务输入可追溯"],
-          ["done", "五文件补丁可审查"],
-          ["done", "五项质量门通过"],
-          ["done", "Runbook 已脱敏沉淀"]
+          ["done", "Issue #3 可追溯"],
+          ["done", "提交 a215065 可核验"],
+          ["done", "绿色 CI 已关联"],
+          ["done", "PR #4 保持 OPEN"]
         ],
         gateTitle: "HUMAN APPROVAL REQUIRED",
         gateCopy: "RepoPilot 在 PR 处停止，不自动合并。",
         files: [
           {
             label: "pr-summary.md",
-            code: `Fix duplicate webhook dispatch
+            code: `PR #4
+Deduplicate concurrent GitHub webhook retries
 
 Files: 5
-Quality gates: 5/5 passed
-Evidence: 20/20 linked
-Rollback: revert patch commit
+Diff: +75 / -22
+Commit: a215065
+CI: 32444690068 · SUCCESS
 
 Status: READY FOR HUMAN REVIEW
 Merge: LOCKED`
           },
           {
             label: "runbook.md",
-            code: `Rule: idempotency must cover both
-state creation and downstream effects.
+            code: `Rule:
+Idempotency must cover both task creation
+and downstream dispatch.
 
-Verify with concurrent requests;
-never infer safety from a serial test.`
+Verify:
+concurrent same ID + sequential retry
++ different-ID negative control.`
           }
         ]
       }
@@ -1105,28 +1100,5 @@ copyButton?.addEventListener("click", async () => {
     label.textContent = "复制";
   }, 1800);
 });
-
-const updateRepositoryFacts = async () => {
-  const source = document.querySelector("[data-live-source]");
-  try {
-    const response = await fetch("https://api.github.com/repos/wellkilo/RepoPilot", {
-      headers: { Accept: "application/vnd.github+json" }
-    });
-    if (!response.ok) {
-      throw new Error(`GitHub API ${response.status}`);
-    }
-    const repository = await response.json();
-    document.querySelector("[data-stars]").textContent = repository.stargazers_count ?? "0";
-    document.querySelector("[data-forks]").textContent = repository.forks_count ?? "0";
-    document.querySelector("[data-open-issues]").textContent = repository.open_issues_count ?? "0";
-    document.querySelector("[data-repo-status]").textContent =
-      `${repository.visibility === "public" ? "Public" : repository.visibility} · Apache-2.0`;
-    source.textContent = "GitHub API 实时数据";
-  } catch {
-    source.textContent = "GitHub API 不可用，展示静态证据";
-  }
-};
-
-void updateRepositoryFacts();
 
 document.querySelector("[data-year]").textContent = String(new Date().getFullYear());

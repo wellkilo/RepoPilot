@@ -82,21 +82,24 @@
   </a>
   <p>
     <sub>
-      Issue → Repo Lead 分诊 → Locator 证明竞态 → Fixer 跨层修复 → Verifier 并发验证 → Human-gated PR
+      公开 Issue #3 → 失败 CI → Repo Lead 分诊 → Locator 证明竞态 → Fixer 五文件修复 → Verifier 7/7 验证 → PR #4
     </sub>
   </p>
   <p>
-    <a href="https://wellkilo.github.io/RepoPilot/#demo"><strong>打开双模式交互 Demo ↗</strong></a>
+    <a href="https://wellkilo.github.io/RepoPilot/#demo"><strong>打开 Issue → PR 交互 Demo ↗</strong></a>
     ·
     <a href="docs/assets/demo/repopilot-agentteam-demo.mp4">观看高清 MP4</a>
     ·
-    <a href="https://wellkilo.github.io/RepoPilot/#loop">查看 8 阶段系统闭环</a>
+    <a href="https://github.com/wellkilo/repopilot-testbed/pull/4">核验公开 PR #4</a>
   </p>
 </div>
 
-> 在线 Demo 无需模型服务或管理员账号。默认模式基于 RepoPilot 当前真实幂等实现，
-> 完整演示 `Route + Schema + Store + Service + Test` 五文件修复；切换到“已验证 Run #1”可回放
-> 真实 Issue、PR #2、GitHub Actions 与 16 条 Evidence，并通过外部链接逐项核验。
+> 在线 Demo 无需模型服务或管理员账号。默认回放
+> [`repopilot-testbed#3`](https://github.com/wellkilo/repopilot-testbed/issues/3)
+> 的真实交付：失败基线稳定复现并发竞态，RepoPilot 通过
+> `Types + Store + Processor + Tests + Docs` 五文件补丁修复，GitHub Actions
+> 通过后创建 [`PR #4`](https://github.com/wellkilo/repopilot-testbed/pull/4)。
+> PR 保持开放，合并权仍由人类持有。
 
 ## 维护闭环
 
@@ -355,20 +358,26 @@ AgentTeams Matrix，Run 会停在 `awaiting_dispatch`，不会用 Mock Agent 伪
   </tr>
   <tr>
     <td><strong>Issue</strong></td>
-    <td><a href="https://github.com/wellkilo/repopilot-testbed/issues/1">#1 · Zero evaluation scores are normalized to one</a></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/issues/3">#3 · Duplicate webhook retries dispatch multiple maintenance tasks</a></td>
+  </tr>
+  <tr>
+    <td><strong>失败基线</strong></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444544920">GitHub Actions Run 32444544920</a></td>
   </tr>
   <tr>
     <td><strong>修复 PR</strong></td>
-    <td><a href="https://github.com/wellkilo/repopilot-testbed/pull/2">Pull Request #2</a></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/pull/4">Pull Request #4 · 5 files · +75 / -22</a></td>
   </tr>
   <tr>
     <td>绿色 CI</td>
-    <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/31793190761">GitHub Actions Run 31793190761</a></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444690068">GitHub Actions Run 32444690068 · 7/7 tests</a></td>
   </tr>
 </table>
 
-测试床包含一个确定性缺陷：合法的 `score=0` 被 `|| 1` 误判为缺失值。
-RepoPilot 已将回退逻辑改为 `?? 1`，并通过 GitHub Actions 完成类型检查和目标回归测试。
+测试床包含一个确定性并发缺陷：相同 GitHub delivery 的两个请求可同时穿透
+`find` / `save` 窗口，创建两个 task 并执行两次 dispatch。RepoPilot 将
+create-or-reuse 收口到 `DeliveryTaskStore.getOrCreate`，使相同 delivery
+共享一个 in-flight Promise，并补充顺序重试和不同 delivery 的负对照。
 PR 保持开放，便于审查且未触发自动合并。
 
 ## 验证
