@@ -118,6 +118,30 @@ describe("RepoPilotStore integration", () => {
     ).rejects.toThrow("append-only");
   });
 
+  it("preserves numeric evidence order when a chain crosses a decimal boundary", async () => {
+    const run = await store.createRun({
+      source: {
+        type: "github_issue",
+        repository: "wellkilo/repopilot-testbed",
+        issueNumber: Math.floor(Date.now() / 1000) + 5
+      },
+      executionPolicy: "pull_request_only"
+    });
+    for (let sequence = 1; sequence <= 10; sequence += 1) {
+      await store.appendEvidence({
+        runId: run.id,
+        evidenceType: "decision",
+        payload: { sequence }
+      });
+    }
+
+    const evidence = await store.listEvidence(run.id);
+    const ids = evidence.map((entry) => BigInt(entry.id));
+
+    expect(ids).toEqual([...ids].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0)));
+    expect(await store.verifyEvidenceChain(run.id)).toBe(true);
+  });
+
   it("records an idempotent Agent Skill lifecycle in the evidence chain", async () => {
     const run = await store.createRun({
       source: {

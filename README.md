@@ -60,7 +60,7 @@
   <tr>
     <td align="center"><strong>5</strong><br /><sub>不同职能 Agent</sub></td>
     <td align="center"><strong>11</strong><br /><sub>Streamable HTTP MCP 工具</sub></td>
-    <td align="center"><strong>26/26</strong><br /><sub>控制面可靠性测试</sub></td>
+    <td align="center"><strong>27/27</strong><br /><sub>控制面可靠性测试</sub></td>
     <td align="center"><strong>0</strong><br /><sub>未审批自动合并</sub></td>
   </tr>
 </table>
@@ -419,7 +419,7 @@ pnpm format:check
 pnpm build
 ```
 
-当前控制面可靠性基线为 `26/26`。测试覆盖状态机、Webhook 验签、证据哈希、数据库
+当前控制面可靠性基线为 `27/27`。测试覆盖状态机、Webhook 验签、证据哈希、数据库
 不可变触发器、delivery 并发幂等、审批版本与一次性消费、Agent Skill Step 生命周期、
 Proof Bundle 评分、HTTP 冲突语义及控制台标签。CI 生成结构化 JSON 报告。
 

@@ -189,6 +189,10 @@ chainHash = SHA256(canonical-json({
 }))
 ```
 
+Evidence 回放严格按数据库 `BIGSERIAL evidence.id` 数值升序。查询中必须限定底层列
+`stored_evidence.id`，不能按 `id::text` 输出别名排序，否则链跨过 `9 -> 10` 时会被
+字典序错误重排并产生假阴性的完整性告警。
+
 数据库触发器拒绝 evidence `UPDATE` 和 `DELETE`。
 
 ## OpenTelemetry

@@ -477,9 +477,9 @@ export class RepoPilotStore {
         previous_hash,
         chain_hash,
         created_at
-      FROM evidence
+      FROM evidence AS stored_evidence
       WHERE run_id = ${runId}
-      ORDER BY id ASC
+      ORDER BY stored_evidence.id ASC
     `;
     return rows.map((row) => this.mapEvidence(row));
   }
