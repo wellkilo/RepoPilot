@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "1.0",
+  "releaseVersion": "0.2.0",
+  "license": "Apache-2.0",
+  "publisher": "RepoPilot",
+  "compatibility": {
+    "agentTeams": "1.2.2",
+    "controlPlaneMcp": "0.2.x"
+  },
+  "distribution": {
+    "source": "https://github.com/wellkilo/RepoPilot/tree/main/skills",
+    "installRoot": "~/worker-skills",
+    "integrity": "CI validates every Skill source and AgentTeams binding against this manifest."
+  },
+  "skills": [
+    {
+      "name": "repository-triage",
+      "version": "0.2.0",
+      "type": "coordination",
+      "path": "repository-triage/SKILL.md",
+      "invokedBy": ["repopilot-lead"],
+      "inputs": ["runId", "GitHub source", "execution policy", "recalled Runbooks"],
+      "outputs": ["risk-ranked plan", "acceptance criteria", "task DAG", "approval checkpoints"],
+      "invocationConditions": "Exactly once at run start and again only after evidence-backed replanning.",
+      "dependencies": [
+        "AgentTeams project/task management",
+        "github_get_issue",
+        "repopilot_search_runbooks",
+        "repopilot_append_evidence"
+      ],
+      "failureHandling": "Record error evidence and stop or create a clarification task instead of guessing.",
+      "permissions": "Read-only planning; no source or GitHub mutation.",
+      "verification": ["step lifecycle recorded", "decision evidence contains acceptance criteria"]
+    },
+    {
+      "name": "root-cause-localization",
+      "version": "0.2.0",
+      "type": "analysis",
+      "path": "root-cause-localization/SKILL.md",
+      "invokedBy": ["repopilot-locator"],
+      "inputs": ["runId", "immutable base revision", "triage plan", "issue or CI evidence"],
+      "outputs": ["reproduction", "call chain", "confirmed cause", "impact surface"],
+      "invocationConditions": "After a valid triage task and again only when new evidence invalidates the cause.",
+      "dependencies": [
+        "repository-local language tools",
+        "repopilot_search_runbooks",
+        "repopilot_append_evidence"
+      ],
+      "failureHandling": "Preserve exact errors, characterize flakiness, and return blocked when evidence is insufficient.",
+      "permissions": "Read-only repository experiments.",
+      "verification": [
+        "before-fix failure reproduced",
+        "root-cause decision cites immutable revision"
+      ]
+    },
+    {
+      "name": "safe-patch-authoring",
+      "version": "0.2.0",
+      "type": "action",
+      "path": "safe-patch-authoring/SKILL.md",
+      "invokedBy": ["repopilot-fixer"],
+      "inputs": ["runId", "confirmed root cause", "acceptance criteria", "base revision"],
+      "outputs": ["focused patch", "regression test", "branch", "commit", "pull request"],
+      "invocationConditions": "Only after evidence confirms a root cause.",
+      "dependencies": [
+        "AgentTeams git-delegation",
+        "repository-local tools",
+        "github_create_pull_request",
+        "repopilot_append_evidence"
+      ],
+      "failureHandling": "Stop on scope expansion and preserve local commit plus external-write errors.",
+      "permissions": "May create a branch, commit, push, and PR; cannot merge, force-push, or change permissions.",
+      "verification": ["patch linked to root-cause evidence", "rollback commit recorded"]
+    },
+    {
+      "name": "verification-gate",
+      "version": "0.2.0",
+      "type": "verification",
+      "path": "verification-gate/SKILL.md",
+      "invokedBy": ["repopilot-verifier"],
+      "inputs": ["runId", "base and patched revisions", "acceptance criteria", "pull request"],
+      "outputs": ["before-after result", "test results", "CI status", "PASS/FAIL/BLOCKED verdict"],
+      "invocationConditions": "After each new patch commit SHA.",
+      "dependencies": [
+        "repository-local test tools",
+        "github_get_pull_request_checks",
+        "repopilot_append_evidence"
+      ],
+      "failureHandling": "Separate pre-existing failures, record retries, and block while CI or evidence is incomplete.",
+      "permissions": "Read-only verification; cannot modify or merge the patch.",
+      "verification": ["focused test result recorded", "GitHub Checks recorded", "verdict explicit"]
+    },
+    {
+      "name": "runbook-archival",
+      "version": "0.2.0",
+      "type": "knowledge",
+      "path": "runbook-archival/SKILL.md",
+      "invokedBy": ["repopilot-archivist"],
+      "inputs": ["runId", "full evidence chain", "verifier result", "existing Runbooks"],
+      "outputs": [
+        "deduplicated Runbook",
+        "scope",
+        "commands",
+        "revision",
+        "residual risk",
+        "pull request Proof Comment"
+      ],
+      "invocationConditions": "After a final PASS, FAIL, or BLOCKED verification outcome.",
+      "dependencies": [
+        "repopilot_search_runbooks",
+        "repopilot_write_runbook",
+        "repopilot_publish_proof_comment"
+      ],
+      "failureHandling": "Return the complete Runbook as a deliverable when storage is unavailable.",
+      "permissions": "No repository code mutation; may create or update only the run-scoped Proof Comment on the target PR; redact secrets and personal data.",
+      "verification": [
+        "Runbook linked to source run",
+        "claims cite revisions or evidence",
+        "Proof Comment publishes score and chain head without raw evidence payloads"
+      ]
+    }
+  ]
+}

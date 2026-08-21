@@ -2169,6 +2169,85 @@ code {
   gap: 28px;
 }
 
+.proof-scoreboard {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 28px;
+  border: 1px solid rgba(73, 214, 208, 0.38);
+  padding: 24px;
+  background: linear-gradient(90deg, rgba(73, 214, 208, 0.1), transparent 42%), var(--deep);
+}
+
+.proof-score {
+  display: grid;
+  border-right: 1px solid var(--line);
+}
+
+.proof-score span,
+.proof-score small,
+.proof-dimensions,
+.proof-scoreboard > a {
+  font-family: var(--mono);
+}
+
+.proof-score span {
+  color: var(--cyan);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.proof-score strong {
+  margin: 6px 0 2px;
+  font-family: var(--display);
+  font-size: 44px;
+  line-height: 1;
+}
+
+.proof-score small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.proof-dimensions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background: var(--line);
+  list-style: none;
+}
+
+.proof-dimensions li {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 10px;
+  color: var(--muted);
+  background: var(--night);
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.proof-dimensions span {
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 18px;
+}
+
+.proof-scoreboard > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cyan);
+  font-size: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 .issue-window {
   border: 1px solid var(--line);
   background: var(--deep);
@@ -2297,6 +2376,13 @@ code {
   margin-top: 12px;
   font-family: var(--display);
   font-size: 16px;
+}
+
+.proof-card > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.75;
 }
 
 .check-list {
@@ -2913,6 +2999,16 @@ code {
   .proof-layout {
     grid-template-columns: 1fr;
   }
+
+  .proof-scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .proof-score {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
 }
 
 @media (max-width: 580px) {
@@ -2942,6 +3038,10 @@ code {
 
   .hero-metrics {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .proof-dimensions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .trace-rail {

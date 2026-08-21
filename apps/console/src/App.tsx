@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
 
 import type {
+  AgentName,
   ApprovalRecord,
   EvidenceType,
   RunDetail,
   RunStatus,
-  RunSummary
+  RunSummary,
+  StepStatus
 } from "@repopilot/contracts";
+import { buildRunProofBundle, evaluateRunProofBundle } from "@repopilot/contracts";
 
 import { decideApproval } from "./api";
 import { useRuns } from "./use-runs";
@@ -33,15 +36,25 @@ const evidenceLabels: Record<EvidenceType, string> = {
   git_reference: "Git 证据",
   ci_result: "CI 结果",
   runbook: "经验沉淀",
+  proof_publication: "PR 证明",
   error: "错误"
 };
 
-const team = [
-  { code: "L", name: "Repo Lead", duty: "拆解与调度" },
-  { code: "X", name: "Locator", duty: "定位根因" },
-  { code: "F", name: "Fixer", duty: "生成修复" },
-  { code: "V", name: "Verifier", duty: "测试验证" },
-  { code: "A", name: "Archivist", duty: "沉淀经验" }
+const stepStatusLabels: Record<StepStatus, string> = {
+  pending: "待执行",
+  running: "执行中",
+  succeeded: "已通过",
+  failed: "失败",
+  blocked: "阻塞",
+  skipped: "跳过"
+};
+
+const team: Array<{ code: string; id: AgentName; name: string; duty: string }> = [
+  { code: "L", id: "repopilot-lead", name: "Repo Lead", duty: "拆解与调度" },
+  { code: "X", id: "repopilot-locator", name: "Locator", duty: "定位根因" },
+  { code: "F", id: "repopilot-fixer", name: "Fixer", duty: "生成修复" },
+  { code: "V", id: "repopilot-verifier", name: "Verifier", duty: "测试验证" },
+  { code: "A", id: "repopilot-archivist", name: "Archivist", duty: "沉淀经验" }
 ];
 
 export function sourceLabel(run: RunSummary): string {
@@ -247,6 +260,13 @@ export function App() {
     () => selectedRun?.approvals.filter((approval) => approval.status === "pending") ?? [],
     [selectedRun]
   );
+  const proof = useMemo(() => {
+    if (!selectedRun || evidenceChainValid === null) {
+      return null;
+    }
+    const bundle = buildRunProofBundle(selectedRun, evidenceChainValid);
+    return evaluateRunProofBundle(bundle);
+  }, [evidenceChainValid, selectedRun]);
 
   return (
     <main className={compactPayloads ? "app compact" : "app"}>
@@ -298,23 +318,63 @@ export function App() {
                 </div>
                 <div className={`integrity-seal ${evidenceChainValid ? "is-valid" : "is-invalid"}`}>
                   <span>{evidenceChainValid ? "CHAIN VERIFIED" : "CHAIN INVALID"}</span>
-                  <strong>{selectedRun.evidence.length}</strong>
-                  <small>evidence events</small>
+                  <strong>{proof?.score ?? 0}</strong>
+                  <small>proof score / 100</small>
                 </div>
               </section>
 
               <section className="team-board" aria-label="Agent 团队">
-                {team.map((agent, index) => (
-                  <div className="agent-node" key={agent.name}>
-                    <span className="agent-code">{agent.code}</span>
-                    <div>
-                      <strong>{agent.name}</strong>
-                      <small>{agent.duty}</small>
+                {team.map((agent, index) => {
+                  const latestStep = selectedRun.steps
+                    .filter((step) => step.agentName === agent.id)
+                    .at(-1);
+                  return (
+                    <div
+                      className={`agent-node step-${latestStep?.status ?? "pending"}`}
+                      key={agent.name}
+                    >
+                      <span className="agent-code">{agent.code}</span>
+                      <div>
+                        <strong>{agent.name}</strong>
+                        <small>{agent.duty}</small>
+                        <em>{stepStatusLabels[latestStep?.status ?? "pending"]}</em>
+                      </div>
+                      {index < team.length - 1 ? <i className="handoff-line" /> : null}
                     </div>
-                    {index < team.length - 1 ? <i className="handoff-line" /> : null}
-                  </div>
-                ))}
+                  );
+                })}
               </section>
+
+              {proof ? (
+                <section className="proof-panel" aria-label="运行证明评分">
+                  <div className="section-heading">
+                    <div>
+                      <p className="eyebrow">Proof-carrying pull request</p>
+                      <h2>机器可核验运行证明</h2>
+                    </div>
+                    <a href={`/api/v1/runs/${encodeURIComponent(selectedRun.id)}/proof`}>
+                      导出 JSON
+                    </a>
+                  </div>
+                  <div className="proof-grid">
+                    {Object.entries(proof.dimensions).map(([dimension, score]) => (
+                      <div key={dimension}>
+                        <span>{dimension}</span>
+                        <strong>{score}</strong>
+                      </div>
+                    ))}
+                  </div>
+                  {proof.findings.length > 0 ? (
+                    <ul className="proof-findings">
+                      {proof.findings.map((finding) => (
+                        <li key={finding}>{finding}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="proof-complete">全部证明门禁已满足。</p>
+                  )}
+                </section>
+              ) : null}
 
               {selectedRun.approvals.length > 0 ? (
                 <section className="approval-section">

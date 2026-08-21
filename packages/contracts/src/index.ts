@@ -28,6 +28,56 @@ export const stepStatusSchema = z.enum([
 ]);
 export type StepStatus = z.infer<typeof stepStatusSchema>;
 
+export const agentNameSchema = z.enum([
+  "repopilot-lead",
+  "repopilot-locator",
+  "repopilot-fixer",
+  "repopilot-verifier",
+  "repopilot-archivist"
+]);
+export type AgentName = z.infer<typeof agentNameSchema>;
+
+export const skillNameSchema = z.enum([
+  "repository-triage",
+  "root-cause-localization",
+  "safe-patch-authoring",
+  "verification-gate",
+  "runbook-archival"
+]);
+export type SkillName = z.infer<typeof skillNameSchema>;
+
+export const startStepSchema = z
+  .object({
+    runId: z.string().uuid(),
+    agentName: agentNameSchema,
+    skillName: skillNameSchema,
+    idempotencyKey: z.string().trim().min(1).max(200)
+  })
+  .superRefine((input, context) => {
+    const expectedAgentBySkill: Record<SkillName, AgentName> = {
+      "repository-triage": "repopilot-lead",
+      "root-cause-localization": "repopilot-locator",
+      "safe-patch-authoring": "repopilot-fixer",
+      "verification-gate": "repopilot-verifier",
+      "runbook-archival": "repopilot-archivist"
+    };
+    if (expectedAgentBySkill[input.skillName] !== input.agentName) {
+      context.addIssue({
+        code: "custom",
+        path: ["agentName"],
+        message: `${input.skillName} must be executed by ${expectedAgentBySkill[input.skillName]}`
+      });
+    }
+  });
+export type StartStepInput = z.infer<typeof startStepSchema>;
+
+export const finishStepSchema = z.object({
+  stepId: z.string().uuid(),
+  status: z.enum(["succeeded", "failed", "blocked", "skipped"]),
+  summary: z.string().trim().min(3).max(4000)
+});
+export type FinishStepInput = z.infer<typeof finishStepSchema>;
+
 export const sourceSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("github_issue"),
@@ -58,6 +108,7 @@ export const evidenceTypeSchema = z.enum([
   "git_reference",
   "ci_result",
   "runbook",
+  "proof_publication",
   "error"
 ]);
 export type EvidenceType = z.infer<typeof evidenceTypeSchema>;
@@ -105,6 +156,13 @@ export const runbookSearchSchema = z.object({
 });
 export type RunbookSearchInput = z.infer<typeof runbookSearchSchema>;
 
+export const publishProofCommentSchema = z.object({
+  runId: z.string().uuid(),
+  repository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+  pullNumber: z.number().int().positive()
+});
+export type PublishProofCommentInput = z.infer<typeof publishProofCommentSchema>;
+
 export interface RunSummary {
   id: string;
   source: RunSource;
@@ -128,6 +186,18 @@ export interface EvidenceRecord {
   createdAt: string;
 }
 
+export interface StepRecord {
+  id: string;
+  runId: string;
+  agentName: AgentName;
+  skillName: SkillName;
+  status: StepStatus;
+  summary: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+}
+
 export interface ApprovalRecord {
   id: string;
   runId: string;
@@ -144,6 +214,17 @@ export interface ApprovalRecord {
 }
 
 export interface RunDetail extends RunSummary {
+  steps: StepRecord[];
   evidence: EvidenceRecord[];
   approvals: ApprovalRecord[];
 }
+
+export {
+  buildRunProofBundle,
+  evaluateRunProofBundle,
+  proofCommentMarker,
+  renderProofComment,
+  type ProofBundleEvaluation,
+  type ProofBundleMetric,
+  type RunProofBundle
+} from "./proof.js";

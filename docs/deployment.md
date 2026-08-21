@@ -28,14 +28,17 @@ Fresh Docker volume automatically runs:
 ```text
 apps/control-plane/sql/001_init.sql
 apps/control-plane/sql/002_approval_consumption.sql
+apps/control-plane/sql/003_step_idempotency.sql
 ```
 
-Existing database:
+从旧版 RepoPilot 升级已有数据库时，`001_init.sql` 已执行过，不要重复运行；后续迁移
+均使用 `IF NOT EXISTS` 或等价保护：
 
 ```bash
-for migration in apps/control-plane/sql/*.sql; do
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
-done
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f apps/control-plane/sql/002_approval_consumption.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f apps/control-plane/sql/003_step_idempotency.sql
 ```
 
 ## AgentTeams
@@ -76,6 +79,19 @@ Configure repository webhook:
   - Issues
   - Workflow runs
 
+## GitHub Token Permissions
+
+RepoPilot 建议使用仅限目标仓库的 fine-grained personal access token 或 GitHub App。
+最小权限为：
+
+- `Contents: Read and write`：推送修复分支；
+- `Pull requests: Read and write`：创建 PR；
+- `Issues: Read and write`：创建或更新 PR 的 Proof Comment；
+- `Actions: Read` 与 `Checks: Read`：读取独立验证结果。
+
+不要授予仓库管理、密钥管理或组织管理权限。`GITHUB_ALLOWED_REPOSITORIES` 仍会在
+应用层限制可操作仓库。
+
 ## Observability
 
 Set:
@@ -85,4 +101,16 @@ OTEL_EXPORTER_OTLP_ENDPOINT=https://<collector>:4318
 OTEL_SERVICE_NAME=repopilot-control-plane
 ```
 
-RepoPilot emits HTTP spans. AgentTeams/AgentLoop supply Agent runtime traces; evidence records link all durable execution facts by Run ID and Trace ID.
+RepoPilot 输出 HTTP、编排、MCP 工具、持久化 Agent Skill 和端到端 Run Span，
+同时输出操作、Skill 与 Run 的计数器和时延直方图。Trace 与 Metrics 共享
+`runId`、`stepId`、Agent、Skill、repository 和 outcome 属性。AgentTeams/AgentLoop
+可补充模型运行轨迹；Evidence 仍是持久化、哈希链接的事实源。
+
+导出一个 Run 并离线复评：
+
+```bash
+curl http://127.0.0.1:3000/api/v1/runs/<run-id>/proof \
+  --output artifacts/proof-bundle.json
+pnpm build
+pnpm evaluate artifacts/proof-bundle.json artifacts/evaluation-report.json
+```

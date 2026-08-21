@@ -3,7 +3,7 @@ name: verification-gate
 description: Use after a patch or pull request exists to run focused and regression validation, inspect CI, compare acceptance criteria, and issue a signed pass, fail, or blocked verdict.
 license: Apache-2.0
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   owner: repopilot
   stage: verification
 ---
@@ -34,6 +34,10 @@ Append each command result as `ci_result` or `tool_result` evidence.
 ## Invocation Conditions
 
 Use after Fixer produces a commit. Repeat only for a new commit SHA.
+
+Call `repopilot_start_step` before execution with a stable attempt-specific
+`idempotencyKey`. Call `repopilot_finish_step` exactly once with the final
+`succeeded`, `failed`, `blocked`, or `skipped` outcome.
 
 ## Dependencies
 

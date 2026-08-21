@@ -96,7 +96,7 @@
             <p class="hero-lead">
               RepoPilot 让五个不同职能的 Agent 在
               <strong>可审批、可回放、可回滚</strong>
-              的边界内协作，把 GitHub 问题安全推进到经过独立验证的 Pull Request。
+              的边界内协作，把 GitHub 问题安全推进到携带可验证执行证明的 Pull Request。
             </p>
             <div class="hero-actions">
               <a class="button button-primary" href="#demo">
@@ -119,12 +119,12 @@
                 <dd>职能 Agent</dd>
               </div>
               <div>
-                <dt>8</dt>
+                <dt>11</dt>
                 <dd>MCP Tools</dd>
               </div>
               <div>
-                <dt>100%</dt>
-                <dd>关键动作留痕</dd>
+                <dt>26/26</dt>
+                <dd>可靠性测试</dd>
               </div>
               <div>
                 <dt>0</dt>
@@ -753,7 +753,7 @@
               <span>03</span>
               <div>
                 <h3>Skill / MCP 能力层</h3>
-                <p>5 Custom Skills · 8 MCP Tools · GitHub REST · AgentLoop Recall</p>
+                <p>5 Versioned Skills · 11 MCP Tools · GitHub REST · AgentLoop Recall</p>
               </div>
               <strong>EXECUTE</strong>
             </article>
@@ -785,8 +785,8 @@
             <h2 id="skills-title">把维护经验做成可复用能力</h2>
           </div>
           <p>
-            五个 Apache-2.0 Skill 覆盖完整维护链路；八个强类型 MCP Tool 连接真实
-            GitHub、审批、证据与知识服务。
+            五个 Apache-2.0 Skill 由统一 Manifest 版本化；十一个强类型 MCP Tool 连接真实
+            GitHub、Agent Step、审批、证据与知识服务，并把验证证明直接发布到 PR。
           </p>
         </div>
 
@@ -831,9 +831,9 @@
             <span class="orbit-item orbit-item-5">Pull Request</span>
             <span class="orbit-item orbit-item-6">Checks</span>
             <div class="orbit-caption">
-              <span>8 tools</span>
+              <span>11 tools</span>
               <span>typed schema</span>
-              <span>repository allowlist</span>
+              <span>versioned skills</span>
             </div>
           </div>
         </div>
@@ -905,13 +905,36 @@
         <div class="section-heading reveal">
           <div>
             <div class="section-index">07 / PROOF</div>
-            <p class="section-kicker">A reproducible race, a focused patch, a green pull request</p>
-            <h2 id="proof-title">每个结论，都能回到公开证据</h2>
+            <p class="section-kicker">Proof-carrying pull request</p>
+            <h2 id="proof-title">PR 不只带 Diff，还带可验证执行证明</h2>
           </div>
           <p>
-            同一 delivery 的并发重试曾创建两个维护任务。失败基线、五文件补丁、回归测试和 Pull
-            Request 均保留在公开测试床中，可独立复现与审查。
+            Proof Bundle 将 AgentTeams Step、Skill 版本、工具与决策 Evidence、审批、链根和 CI
+            结果封装为统一 JSON，并以幂等、脱敏评论随 PR 交付；公开测试床保留真实缺陷与修复证据。
           </p>
+        </div>
+
+        <div class="proof-scoreboard reveal" data-delay="70">
+          <div class="proof-score">
+            <span>CONTROL PLANE</span>
+            <strong>26/26</strong>
+            <small>deterministic tests passed</small>
+          </div>
+          <ol class="proof-dimensions" aria-label="Proof Bundle 五维质量门禁">
+            <li><span>25</span>协作闭环</li>
+            <li><span>20</span>Skill 工程</li>
+            <li><span>25</span>验证证据</li>
+            <li><span>20</span>安全审计</li>
+            <li><span>10</span>经验复用</li>
+          </ol>
+          <a
+            href="https://github.com/wellkilo/RepoPilot/blob/main/evaluation/README.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            查看评测协议与 Proof Schema
+            <span aria-hidden="true">↗</span>
+          </a>
         </div>
 
         <div class="proof-layout">
@@ -996,6 +1019,20 @@
                 <span aria-hidden="true">↗</span>
               </a>
             </article>
+
+            <article class="proof-card proof-card-live reveal" data-delay="290">
+              <span class="proof-label">PROOF COMMENT</span>
+              <strong>证明随 PR 交付</strong>
+              <div class="check-list">
+                <span class="is-pass">run-scoped</span>
+                <span class="is-pass">redacted</span>
+                <span class="is-pass">idempotent update</span>
+              </div>
+              <p>
+                Archivist 将五维评分、Agent / Skill 结果与 SHA-256 链根发布到对应 PR；
+                重跑只更新同一评论，不重复刷屏。
+              </p>
+            </article>
           </div>
         </div>
       </section>
@@ -1043,7 +1080,7 @@
             >
               <span>02</span>
               <strong>Skills</strong>
-              <small>5 reusable contracts</small>
+              <small>5 versioned contracts</small>
             </a>
             <a
               href="https://github.com/wellkilo/RepoPilot/blob/main/API.md"
@@ -1051,8 +1088,8 @@
               rel="noreferrer"
             >
               <span>03</span>
-              <strong>MCP & API</strong>
-              <small>Typed schemas</small>
+              <strong>Proof & Eval</strong>
+              <small>Portable JSON · quality gates</small>
             </a>
             <a
               href="https://github.com/wellkilo/RepoPilot/tree/main/docs"
@@ -1061,7 +1098,7 @@
             >
               <span>04</span>
               <strong>Docs</strong>
-              <small>Architecture · Security · Demo</small>
+              <small>Architecture · Security · Semifinal</small>
             </a>
           </div>
         </div>

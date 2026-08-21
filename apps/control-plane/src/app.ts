@@ -7,7 +7,9 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import {
   approvalDecisionSchema,
+  buildRunProofBundle,
   createRunSchema,
+  evaluateRunProofBundle,
   runStatusSchema,
   type CreateRunInput
 } from "@repopilot/contracts";
@@ -110,6 +112,19 @@ export async function buildApp(dependencies: AppDependencies): Promise<FastifyIn
       return reply.code(404).send({ error: "run_not_found" });
     }
     return { run, evidenceChainValid: await store.verifyEvidenceChain(id) };
+  });
+
+  app.get<{ Params: { id: string } }>("/api/v1/runs/:id/proof", async (request, reply) => {
+    const { id } = uuidParamsSchema.parse(request.params);
+    const run = await store.getRunDetail(id);
+    if (!run) {
+      return reply.code(404).send({ error: "run_not_found" });
+    }
+    const bundle = buildRunProofBundle(run, await store.verifyEvidenceChain(id));
+    return {
+      bundle,
+      evaluation: evaluateRunProofBundle(bundle)
+    };
   });
 
   app.post<{ Body: CreateRunInput }>(

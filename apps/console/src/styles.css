@@ -87,6 +87,92 @@ textarea:focus-visible {
   align-items: center;
 }
 
+.agent-node em {
+  margin-top: 4px;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.agent-node.step-running {
+  border-color: rgba(73, 214, 208, 0.55);
+  box-shadow: inset 0 -2px 0 rgba(73, 214, 208, 0.5);
+}
+
+.agent-node.step-succeeded em {
+  color: var(--green);
+}
+
+.agent-node.step-failed em,
+.agent-node.step-blocked em {
+  color: var(--red);
+}
+
+.proof-panel {
+  margin-bottom: 28px;
+  border: 1px solid var(--line);
+  padding: 22px;
+  background:
+    linear-gradient(135deg, rgba(73, 214, 208, 0.08), transparent 42%), rgba(12, 24, 36, 0.68);
+}
+
+.proof-panel .section-heading {
+  margin-bottom: 18px;
+}
+
+.proof-panel a {
+  border-bottom: 1px solid rgba(73, 214, 208, 0.45);
+  color: var(--cyan);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.proof-grid div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid rgba(101, 168, 255, 0.2);
+  padding: 12px;
+  background: rgba(7, 16, 25, 0.58);
+}
+
+.proof-grid span {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.proof-grid strong {
+  color: var(--cyan);
+  font-family: "Oxanium", sans-serif;
+  font-size: 24px;
+}
+
+.proof-findings,
+.proof-complete {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.proof-complete {
+  color: var(--green);
+}
+
 .brand-lockup {
   gap: 13px;
 }
@@ -691,6 +777,10 @@ textarea:focus-visible {
   .team-board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .proof-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -713,6 +803,10 @@ textarea:focus-visible {
   }
 
   .run-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .proof-grid {
     grid-template-columns: 1fr;
   }
 

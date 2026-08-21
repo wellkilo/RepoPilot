@@ -4,14 +4,23 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   appendEvidenceSchema,
+  buildRunProofBundle,
+  evaluateRunProofBundle,
+  finishStepSchema,
+  proofCommentMarker,
+  publishProofCommentSchema,
+  renderProofComment,
   requestApprovalSchema,
-  runbookSearchSchema
+  runbookSearchSchema,
+  startStepSchema,
+  type RunDetail
 } from "@repopilot/contracts";
 import * as z from "zod/v4";
 
 import type { GitHubClient } from "./clients/github.js";
 import type { RepoPilotStore } from "./db.js";
 import type { RunService } from "./services/run-service.js";
+import { observeOperation } from "./telemetry.js";
 
 const repositorySchema = z
   .string()
@@ -34,6 +43,23 @@ function toolResult(value: unknown) {
   };
 }
 
+function observedTool<T>(
+  name: string,
+  attributes: Record<string, string | number | boolean>,
+  operation: () => Promise<T>
+): Promise<T> {
+  return observeOperation(
+    `mcp.tool.${name}`,
+    {
+      "gen_ai.operation.name": "execute_tool",
+      "gen_ai.tool.name": name,
+      "repopilot.component": "mcp",
+      ...attributes
+    },
+    operation
+  );
+}
+
 export function createRepoPilotMcpServer(dependencies: {
   store: RepoPilotStore;
   github: GitHubClient;
@@ -48,8 +74,53 @@ export function createRepoPilotMcpServer(dependencies: {
   };
   const server = new McpServer({
     name: "repopilot",
-    version: "0.1.0"
+    version: "0.2.0"
   });
+
+  server.registerTool(
+    "repopilot_start_step",
+    {
+      description:
+        "Start one idempotent Agent Skill execution step and return the durable step ID. Call before running the Skill.",
+      inputSchema: startStepSchema.shape
+    },
+    async (input) => {
+      const parsed = startStepSchema.parse(input);
+      return toolResult(
+        await observedTool(
+          "repopilot_start_step",
+          {
+            "repopilot.run_id": parsed.runId,
+            "repopilot.agent.name": parsed.agentName,
+            "repopilot.skill.name": parsed.skillName
+          },
+          () => runService.startStep(parsed)
+        )
+      );
+    }
+  );
+
+  server.registerTool(
+    "repopilot_finish_step",
+    {
+      description:
+        "Finish a running Agent Skill step with an explicit succeeded, failed, blocked, or skipped outcome and evidence-backed summary.",
+      inputSchema: finishStepSchema.shape
+    },
+    async (input) => {
+      const parsed = finishStepSchema.parse(input);
+      return toolResult(
+        await observedTool(
+          "repopilot_finish_step",
+          {
+            "repopilot.step_id": parsed.stepId,
+            "repopilot.step.status": parsed.status
+          },
+          () => runService.finishStep(parsed)
+        )
+      );
+    }
+  );
 
   server.registerTool(
     "repopilot_append_evidence",
@@ -58,7 +129,19 @@ export function createRepoPilotMcpServer(dependencies: {
         "Append an immutable, hash-chained evidence record for a RepoPilot run. Use after every material decision, tool call, tool result, git reference, and CI result.",
       inputSchema: appendEvidenceSchema.shape
     },
-    async (input) => toolResult(await store.appendEvidence(appendEvidenceSchema.parse(input)))
+    async (input) => {
+      const parsed = appendEvidenceSchema.parse(input);
+      return toolResult(
+        await observedTool(
+          "repopilot_append_evidence",
+          {
+            "repopilot.run_id": parsed.runId,
+            "repopilot.evidence.type": parsed.evidenceType
+          },
+          () => store.appendEvidence(parsed)
+        )
+      );
+    }
   );
 
   server.registerTool(
@@ -68,8 +151,20 @@ export function createRepoPilotMcpServer(dependencies: {
         "Request human approval for merge, branch deletion, rollback, permission or secret changes, or another high-risk tool. This does not execute the action.",
       inputSchema: requestApprovalSchema.shape
     },
-    async (input) =>
-      toolResult(await runService.requestApproval(requestApprovalSchema.parse(input)))
+    async (input) => {
+      const parsed = requestApprovalSchema.parse(input);
+      return toolResult(
+        await observedTool(
+          "repopilot_request_approval",
+          {
+            "repopilot.run_id": parsed.runId,
+            "repopilot.approval.action": parsed.action,
+            "repopilot.approval.risk_level": parsed.riskLevel
+          },
+          () => runService.requestApproval(parsed)
+        )
+      );
+    }
   );
 
   server.registerTool(
@@ -79,7 +174,19 @@ export function createRepoPilotMcpServer(dependencies: {
         "Search verified historical RepoPilot runbooks for the same repository before choosing a repair strategy.",
       inputSchema: runbookSearchSchema.shape
     },
-    async (input) => toolResult(await store.searchRunbooks(runbookSearchSchema.parse(input)))
+    async (input) => {
+      const parsed = runbookSearchSchema.parse(input);
+      return toolResult(
+        await observedTool(
+          "repopilot_search_runbooks",
+          {
+            "repopilot.repository": parsed.repository,
+            "repopilot.runbook.limit": parsed.limit
+          },
+          () => store.searchRunbooks(parsed)
+        )
+      );
+    }
   );
 
   server.registerTool(
@@ -95,7 +202,17 @@ export function createRepoPilotMcpServer(dependencies: {
         sourceRunId: z.string().uuid()
       }
     },
-    async (input) => toolResult(await store.writeRunbook(input))
+    async (input) =>
+      toolResult(
+        await observedTool(
+          "repopilot_write_runbook",
+          {
+            "repopilot.run_id": input.sourceRunId,
+            "repopilot.repository": input.repository
+          },
+          () => store.writeRunbook(input)
+        )
+      )
   );
 
   server.registerTool(
@@ -110,7 +227,16 @@ export function createRepoPilotMcpServer(dependencies: {
     async ({ repository, issueNumber }) => {
       assertAllowedRepository(repository);
       const { owner, name } = splitRepository(repository);
-      return toolResult(await github.getIssue(owner, name, issueNumber));
+      return toolResult(
+        await observedTool(
+          "github_get_issue",
+          {
+            "repopilot.repository": repository,
+            "repopilot.issue.number": issueNumber
+          },
+          () => github.getIssue(owner, name, issueNumber)
+        )
+      );
     }
   );
 
@@ -131,26 +257,37 @@ export function createRepoPilotMcpServer(dependencies: {
     async ({ runId, repository, title, body, head, base }) => {
       assertAllowedRepository(repository);
       const { owner, name } = splitRepository(repository);
-      const result = await github.createPullRequest({
-        owner,
-        repository: name,
-        title,
-        body,
-        head,
-        base
-      });
-      await store.appendEvidence({
-        runId,
-        evidenceType: "git_reference",
-        payload: {
-          operation: "create_pull_request",
-          repository,
-          head,
-          base,
-          pullRequest: result
-        }
-      });
-      return toolResult(result);
+      return toolResult(
+        await observedTool(
+          "github_create_pull_request",
+          {
+            "repopilot.run_id": runId,
+            "repopilot.repository": repository
+          },
+          async () => {
+            const result = await github.createPullRequest({
+              owner,
+              repository: name,
+              title,
+              body,
+              head,
+              base
+            });
+            await store.appendEvidence({
+              runId,
+              evidenceType: "git_reference",
+              payload: {
+                operation: "create_pull_request",
+                repository,
+                head,
+                base,
+                pullRequest: result
+              }
+            });
+            return result;
+          }
+        )
+      );
     }
   );
 
@@ -168,13 +305,111 @@ export function createRepoPilotMcpServer(dependencies: {
     async ({ runId, repository, pullNumber }) => {
       assertAllowedRepository(repository);
       const { owner, name } = splitRepository(repository);
-      const result = await github.getPullRequestChecks(owner, name, pullNumber);
-      await store.appendEvidence({
-        runId,
-        evidenceType: "ci_result",
-        payload: { repository, ...result }
-      });
-      return toolResult(result);
+      return toolResult(
+        await observedTool(
+          "github_get_pull_request_checks",
+          {
+            "repopilot.run_id": runId,
+            "repopilot.repository": repository,
+            "repopilot.pull_request.number": pullNumber
+          },
+          async () => {
+            const result = await github.getPullRequestChecks(owner, name, pullNumber);
+            await store.appendEvidence({
+              runId,
+              evidenceType: "ci_result",
+              payload: { repository, ...result }
+            });
+            return result;
+          }
+        )
+      );
+    }
+  );
+
+  server.registerTool(
+    "repopilot_publish_proof_comment",
+    {
+      description:
+        "Build the current redacted Proof Bundle summary and idempotently publish it as a managed pull request comment.",
+      inputSchema: publishProofCommentSchema.shape
+    },
+    async (input) => {
+      const parsed = publishProofCommentSchema.parse(input);
+      assertAllowedRepository(parsed.repository);
+      const detail = await store.getRunDetail(parsed.runId);
+      if (!detail) {
+        throw new Error(`Run ${parsed.runId} was not found`);
+      }
+      assertProofPublicationTarget(detail, parsed.repository, parsed.pullNumber);
+      const { owner, name } = splitRepository(parsed.repository);
+      return toolResult(
+        await observedTool(
+          "repopilot_publish_proof_comment",
+          {
+            "repopilot.run_id": parsed.runId,
+            "repopilot.repository": parsed.repository,
+            "repopilot.pull_request.number": parsed.pullNumber
+          },
+          async () => {
+            let bundle = buildRunProofBundle(detail, await store.verifyEvidenceChain(parsed.runId));
+            let evaluation = evaluateRunProofBundle(bundle);
+            const marker = proofCommentMarker(parsed.runId);
+            const result = await github.upsertPullRequestComment(
+              owner,
+              name,
+              parsed.pullNumber,
+              marker,
+              renderProofComment(bundle, evaluation)
+            );
+            const publicationRecorded = detail.evidence.some(
+              (entry) =>
+                entry.evidenceType === "proof_publication" &&
+                entry.payload.repository === parsed.repository &&
+                entry.payload.pullNumber === parsed.pullNumber
+            );
+            if (!publicationRecorded) {
+              await store.appendEvidence({
+                runId: parsed.runId,
+                evidenceType: "proof_publication",
+                payload: {
+                  operation: "publish_proof_comment",
+                  repository: parsed.repository,
+                  pullNumber: parsed.pullNumber,
+                  proofScore: evaluation.score,
+                  grade: evaluation.grade,
+                  publishedChainHead: bundle.integrity.chainHead,
+                  comment: result
+                }
+              });
+              const refreshedDetail = await store.getRunDetail(parsed.runId);
+              if (!refreshedDetail) {
+                throw new Error(`Run ${parsed.runId} was not found after proof publication`);
+              }
+              bundle = buildRunProofBundle(
+                refreshedDetail,
+                await store.verifyEvidenceChain(parsed.runId)
+              );
+              evaluation = evaluateRunProofBundle(bundle);
+              await github.upsertPullRequestComment(
+                owner,
+                name,
+                parsed.pullNumber,
+                marker,
+                renderProofComment(bundle, evaluation)
+              );
+            }
+            return {
+              ...result,
+              runId: parsed.runId,
+              pullNumber: parsed.pullNumber,
+              proofScore: evaluation.score,
+              grade: evaluation.grade,
+              chainHead: bundle.integrity.chainHead
+            };
+          }
+        )
+      );
     }
   );
 
@@ -194,31 +429,91 @@ export function createRepoPilotMcpServer(dependencies: {
     },
     async ({ runId, repository, pullNumber, approvalId, approvalVersion, commitTitle }) => {
       assertAllowedRepository(repository);
-      await store.consumeApprovedAction(approvalId, "merge_pull_request", approvalVersion, runId);
-      const { owner, name } = splitRepository(repository);
-      const result = await github.mergePullRequest({
-        owner,
-        repository: name,
-        pullNumber,
-        commitTitle
-      });
-      await store.appendEvidence({
-        runId,
-        evidenceType: "git_reference",
-        payload: {
-          operation: "merge_pull_request",
-          repository,
-          pullNumber,
-          approvalId,
-          approvalVersion,
-          result
-        }
-      });
-      return toolResult(result);
+      return toolResult(
+        await observedTool(
+          "github_merge_pull_request",
+          {
+            "repopilot.run_id": runId,
+            "repopilot.repository": repository,
+            "repopilot.pull_request.number": pullNumber,
+            "repopilot.approval.id": approvalId
+          },
+          async () => {
+            await store.consumeApprovedAction(
+              approvalId,
+              "merge_pull_request",
+              approvalVersion,
+              runId
+            );
+            const { owner, name } = splitRepository(repository);
+            const result = await github.mergePullRequest({
+              owner,
+              repository: name,
+              pullNumber,
+              commitTitle
+            });
+            await store.appendEvidence({
+              runId,
+              evidenceType: "git_reference",
+              payload: {
+                operation: "merge_pull_request",
+                repository,
+                pullNumber,
+                approvalId,
+                approvalVersion,
+                result
+              }
+            });
+            return result;
+          }
+        )
+      );
     }
   );
 
   return server;
+}
+
+export function hasPullRequestEvidence(
+  evidence: Awaited<ReturnType<RepoPilotStore["listEvidence"]>>,
+  repository: string,
+  pullNumber: number
+): boolean {
+  return evidence.some((entry) => {
+    if (
+      entry.evidenceType !== "git_reference" ||
+      entry.payload.operation !== "create_pull_request" ||
+      typeof entry.payload.repository !== "string" ||
+      entry.payload.repository.toLowerCase() !== repository.toLowerCase()
+    ) {
+      return false;
+    }
+    const pullRequest = entry.payload.pullRequest;
+    return (
+      pullRequest !== null &&
+      typeof pullRequest === "object" &&
+      !Array.isArray(pullRequest) &&
+      (pullRequest as Record<string, unknown>).number === pullNumber
+    );
+  });
+}
+
+export function assertProofPublicationTarget(
+  detail: RunDetail,
+  repository: string,
+  pullNumber: number
+): void {
+  if (detail.source.repository.toLowerCase() !== repository.toLowerCase()) {
+    throw new Error(`Run ${detail.id} belongs to ${detail.source.repository}, not ${repository}`);
+  }
+  if (detail.status !== "succeeded" && detail.status !== "failed") {
+    throw new Error(
+      `Run ${detail.id} must be terminal before publishing proof; current status is ${detail.status}`
+    );
+  }
+  if (!hasPullRequestEvidence(detail.evidence, repository, pullNumber)) {
+    throw new Error(`Pull request ${repository}#${pullNumber} is not linked to Run ${detail.id}`);
+  }
 }
 
 export async function handleMcpRequest(

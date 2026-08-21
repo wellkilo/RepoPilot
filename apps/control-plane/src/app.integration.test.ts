@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { afterAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "./app.js";
@@ -72,5 +74,43 @@ describe("approval HTTP contract", () => {
     });
     expect(stale.statusCode).toBe(409);
     expect(stale.json()).toMatchObject({ error: "conflict" });
+  });
+});
+
+describe("proof bundle HTTP contract", () => {
+  it("exports durable steps, evidence integrity, and deterministic evaluation", async () => {
+    const run = await store.createRun({
+      source: {
+        type: "github_issue",
+        repository: "wellkilo/repopilot-testbed",
+        issueNumber: Math.floor(Date.now() / 1000) + 200
+      },
+      executionPolicy: "pull_request_only"
+    });
+    await store.startStep({
+      runId: run.id,
+      agentName: "repopilot-lead",
+      skillName: "repository-triage",
+      idempotencyKey: randomUUID()
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/v1/runs/${run.id}/proof`
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      bundle: {
+        schemaVersion: "1.0",
+        run: { id: run.id, executionPolicy: "pull_request_only" },
+        integrity: { chainValid: true, algorithm: "SHA-256" },
+        steps: [{ agentName: "repopilot-lead", skillName: "repository-triage" }]
+      },
+      evaluation: {
+        evaluatorVersion: "1.0",
+        grade: "insufficient"
+      }
+    });
   });
 });

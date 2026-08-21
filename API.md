@@ -81,18 +81,67 @@ Issue 输入：
 
 ### `GET /api/v1/runs/{runId}`
 
-返回 Run、完整 evidence、审批记录和哈希链验证结果。
+返回 Run、Agent Skill Step、完整 evidence、审批记录和哈希链验证结果。
 
 ```json
 {
   "run": {
     "id": "uuid",
+    "steps": [
+      {
+        "id": "uuid",
+        "agentName": "repopilot-verifier",
+        "skillName": "verification-gate",
+        "status": "succeeded",
+        "summary": "7/7 tests and GitHub Checks passed"
+      }
+    ],
     "evidence": [],
     "approvals": []
   },
   "evidenceChainValid": true
 }
 ```
+
+### `GET /api/v1/runs/{runId}/proof`
+
+导出机器可核验的 Proof Bundle 及确定性评测结果。
+
+```json
+{
+  "bundle": {
+    "schemaVersion": "1.0",
+    "generatedAt": "2026-08-21T00:00:00.000Z",
+    "run": {},
+    "steps": [],
+    "approvals": [],
+    "evidence": [],
+    "integrity": {
+      "algorithm": "SHA-256",
+      "canonicalization": "canonical-json",
+      "chainValid": true,
+      "chainHead": "hex"
+    }
+  },
+  "evaluation": {
+    "evaluatorVersion": "1.0",
+    "score": 100,
+    "grade": "verified",
+    "dimensions": {
+      "coordination": 25,
+      "skillEngineering": 20,
+      "verification": 25,
+      "safetyAuditability": 20,
+      "learningReuse": 10
+    },
+    "metrics": [],
+    "findings": []
+  }
+}
+```
+
+Proof Score 只评价运行证据完整性，不替代测试床 acceptance criteria、Verifier
+结论或 GitHub Checks 对补丁语义质量的判断。
 
 ### `POST /api/v1/runs/{runId}/status`
 
@@ -161,6 +210,42 @@ POST /mcp
 
 Transport：MCP Streamable HTTP，stateless，JSON response。
 
+### `repopilot_start_step`
+
+每次 Agent 执行核心 Skill 前调用。`idempotencyKey` 由调用方提供，同一 Run
+内重复调用返回同一个 Step，不重复追加开始事件。
+
+```json
+{
+  "runId": "uuid",
+  "agentName": "repopilot-locator",
+  "skillName": "root-cause-localization",
+  "idempotencyKey": "issue-3-localization-attempt-1"
+}
+```
+
+Agent 与 Skill 的对应关系由 Schema 强校验。
+
+### `repopilot_finish_step`
+
+```json
+{
+  "stepId": "uuid",
+  "status": "succeeded",
+  "summary": "Reproduced duplicate dispatch and confirmed the find/save race."
+}
+```
+
+终态为 `succeeded | failed | blocked | skipped`。同一终态和 summary 的重试幂等；
+冲突终态会被拒绝。开始和结束均写入 `agent_message` Evidence。
+
+Evidence 类型为：
+
+```text
+input | decision | agent_message | tool_call | tool_result | approval
+| git_reference | ci_result | runbook | proof_publication | error
+```
+
 ### `repopilot_append_evidence`
 
 输入：
@@ -218,6 +303,33 @@ Transport：MCP Streamable HTTP，stateless，JSON response。
   "sourceRunId": "uuid"
 }
 ```
+
+### `repopilot_publish_proof_comment`
+
+读取指定 Run 的持久化 Step、Approval 和 Evidence，重新验证哈希链，生成脱敏
+Proof 摘要并幂等发布到对应 Pull Request：
+
+```json
+{
+  "runId": "uuid",
+  "repository": "wellkilo/repopilot-testbed",
+  "pullNumber": 4
+}
+```
+
+真实调用：
+
+```text
+GET   /repos/{owner}/{repo}/issues/{pull_number}/comments?per_page=100
+POST  /repos/{owner}/{repo}/issues/{pull_number}/comments
+PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}
+```
+
+评论以 `<!-- repopilot-proof:{runId} -->` 作为稳定标记。首次调用创建评论，后续调用
+更新同一评论，不重复刷屏。输出包含 `action`、`htmlUrl`、`proofScore`、`grade` 和
+`chainHead`。评论不包含原始 Evidence payload。仅 `succeeded` 或 `failed` 终态 Run
+可以发布，且目标 PR 必须存在于该 Run 的 `create_pull_request` Evidence 中。评论内
+同时提供不含原始 payload 的机器可解析 JSON 摘要。
 
 ### `github_get_issue`
 

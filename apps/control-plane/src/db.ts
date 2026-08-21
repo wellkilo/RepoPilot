@@ -7,12 +7,15 @@ import {
   type ApprovalRecord,
   type CreateRunInput,
   type EvidenceRecord,
+  type FinishStepInput,
   type RequestApprovalInput,
   type RunDetail,
   type RunSource,
   type RunStatus,
   type RunSummary,
-  type RunbookSearchInput
+  type RunbookSearchInput,
+  type StartStepInput,
+  type StepRecord
 } from "@repopilot/contracts";
 import postgres, { type Sql } from "postgres";
 
@@ -50,6 +53,18 @@ interface EvidenceRow {
   created_at: Date;
 }
 
+interface StepRow {
+  id: string;
+  run_id: string;
+  agent_name: StepRecord["agentName"];
+  kind: StepRecord["skillName"];
+  status: StepRecord["status"];
+  summary: string | null;
+  started_at: Date | null;
+  ended_at: Date | null;
+  created_at: Date;
+}
+
 interface ApprovalRow {
   id: string;
   run_id: string;
@@ -82,6 +97,11 @@ export interface CreateRunOptions {
 
 export interface CreatedRun extends RunSummary {
   newlyCreated: boolean;
+}
+
+export interface FinishedStep {
+  step: StepRecord;
+  changed: boolean;
 }
 
 export class RepoPilotStore {
@@ -217,11 +237,12 @@ export class RepoPilotStore {
       return null;
     }
 
-    const [evidence, approvals] = await Promise.all([
+    const [steps, evidence, approvals] = await Promise.all([
+      this.listSteps(runId),
       this.listEvidence(runId),
       this.listApprovals(runId)
     ]);
-    return { ...run, evidence, approvals };
+    return { ...run, steps, evidence, approvals };
   }
 
   async transitionRun(runId: string, target: RunStatus): Promise<RunSummary> {
@@ -253,6 +274,128 @@ export class RepoPilotStore {
       RETURNING *
     `;
     return this.mapRun(this.requireRow(rows[0], `Run ${runId} was not found`));
+  }
+
+  async startStep(input: StartStepInput): Promise<StepRecord> {
+    const result = await this.sql.begin(async (transaction) => {
+      await transaction`
+        SELECT pg_advisory_xact_lock(hashtext(${`${input.runId}:${input.idempotencyKey}`}))
+      `;
+      const existing = await transaction<StepRow[]>`
+        SELECT *
+        FROM steps
+        WHERE run_id = ${input.runId}
+          AND idempotency_key = ${input.idempotencyKey}
+        LIMIT 1
+      `;
+      if (existing[0]) {
+        const step = this.mapStep(existing[0]);
+        if (step.agentName !== input.agentName || step.skillName !== input.skillName) {
+          throw new Error(
+            `Step idempotency key ${input.idempotencyKey} is already bound to ${step.agentName}/${step.skillName}`
+          );
+        }
+        return { step, newlyCreated: false };
+      }
+      const rows = await transaction<StepRow[]>`
+        INSERT INTO steps (
+          id,
+          run_id,
+          agent_name,
+          kind,
+          status,
+          idempotency_key,
+          started_at
+        )
+        VALUES (
+          ${randomUUID()},
+          ${input.runId},
+          ${input.agentName},
+          ${input.skillName},
+          'running',
+          ${input.idempotencyKey},
+          now()
+        )
+        RETURNING *
+      `;
+      return {
+        step: this.mapStep(this.requireRow(rows[0], "Step was not started")),
+        newlyCreated: true
+      };
+    });
+    if (result.newlyCreated) {
+      await this.appendEvidence({
+        runId: result.step.runId,
+        stepId: result.step.id,
+        evidenceType: "agent_message",
+        payload: {
+          event: "step_started",
+          agentName: result.step.agentName,
+          skillName: result.step.skillName,
+          idempotencyKey: input.idempotencyKey,
+          status: result.step.status
+        }
+      });
+    }
+    return result.step;
+  }
+
+  async finishStep(input: FinishStepInput): Promise<FinishedStep> {
+    const result = await this.sql.begin(async (transaction) => {
+      const currentRows = await transaction<StepRow[]>`
+        SELECT *
+        FROM steps
+        WHERE id = ${input.stepId}
+        FOR UPDATE
+      `;
+      const current = this.mapStep(
+        this.requireRow(currentRows[0], `Step ${input.stepId} was not found`)
+      );
+      if (current.status !== "running") {
+        if (current.status === input.status && current.summary === input.summary) {
+          return { step: current, changed: false };
+        }
+        throw new Error(`Step ${input.stepId} is already ${current.status}`);
+      }
+      const rows = await transaction<StepRow[]>`
+        UPDATE steps
+        SET
+          status = ${input.status},
+          summary = ${input.summary},
+          ended_at = now()
+        WHERE id = ${input.stepId}
+        RETURNING *
+      `;
+      return {
+        step: this.mapStep(this.requireRow(rows[0], `Step ${input.stepId} was not finished`)),
+        changed: true
+      };
+    });
+    if (result.changed) {
+      await this.appendEvidence({
+        runId: result.step.runId,
+        stepId: result.step.id,
+        evidenceType: "agent_message",
+        payload: {
+          event: "step_finished",
+          agentName: result.step.agentName,
+          skillName: result.step.skillName,
+          status: result.step.status,
+          summary: result.step.summary
+        }
+      });
+    }
+    return result;
+  }
+
+  async listSteps(runId: string): Promise<StepRecord[]> {
+    const rows = await this.sql<StepRow[]>`
+      SELECT *
+      FROM steps
+      WHERE run_id = ${runId}
+      ORDER BY created_at ASC, id ASC
+    `;
+    return rows.map((row) => this.mapStep(row));
   }
 
   async appendEvidence(input: AppendEvidenceInput): Promise<EvidenceRecord> {
@@ -631,6 +774,20 @@ export class RepoPilotStore {
       payloadHash: row.payload_hash,
       previousHash: row.previous_hash,
       chainHash: row.chain_hash,
+      createdAt: row.created_at.toISOString()
+    };
+  }
+
+  private mapStep(row: StepRow): StepRecord {
+    return {
+      id: row.id,
+      runId: row.run_id,
+      agentName: row.agent_name,
+      skillName: row.kind,
+      status: row.status,
+      summary: row.summary,
+      startedAt: row.started_at?.toISOString() ?? null,
+      endedAt: row.ended_at?.toISOString() ?? null,
       createdAt: row.created_at.toISOString()
     };
   }

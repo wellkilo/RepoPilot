@@ -55,6 +55,12 @@ Terminal states cannot transition.
 - `approvals`: optimistic version + one-time `consumed_at`.
 - `runbooks`: full-text index and optional `vector(1536)`.
 
+每个 Agent 必须通过 RepoPilot MCP 打开和关闭 Skill Step，使 AgentTeams 角色执行可以
+从运行数据查询，而不是从静态清单推断。Proof Bundle 将 Step 时间线、审批、
+Evidence 链根、PR/CI 事实和确定性质量门禁合并为一个可移植 JSON 工件。
+Archivist 再通过幂等 GitHub 评论把脱敏摘要与最终链根附着到目标 PR；首次发布记录
+`proof_publication` Evidence，之后只更新同一评论。
+
 ## Deployment Profiles
 
 ### Local development

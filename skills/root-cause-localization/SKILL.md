@@ -3,7 +3,7 @@ name: root-cause-localization
 description: Use after triage to reproduce a repository failure, locate the smallest supported root cause, analyze impact, and return evidence without changing files.
 license: Apache-2.0
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   owner: repopilot
   stage: localization
 ---
@@ -34,6 +34,10 @@ Append reproduction and conclusion as `tool_result` and `decision` evidence.
 ## Invocation Conditions
 
 Use only after a valid triage task has been delegated. Re-run when Fixer or Verifier produces evidence that contradicts the conclusion.
+
+Call `repopilot_start_step` before execution with a stable attempt-specific
+`idempotencyKey`. Call `repopilot_finish_step` exactly once with the final
+`succeeded`, `failed`, `blocked`, or `skipped` outcome.
 
 ## Dependencies
 

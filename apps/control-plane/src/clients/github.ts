@@ -40,6 +40,12 @@ export interface MergePullRequestInput {
   commitTitle?: string;
 }
 
+export interface ProofCommentResult {
+  id: number;
+  htmlUrl: string;
+  action: "created" | "updated";
+}
+
 interface GitHubErrorBody {
   message?: string;
   documentation_url?: string;
@@ -186,6 +192,40 @@ export class GitHubClient {
     };
   }
 
+  async upsertPullRequestComment(
+    owner: string,
+    repository: string,
+    pullNumber: number,
+    marker: string,
+    body: string
+  ): Promise<ProofCommentResult> {
+    const comments = await this.request<
+      Array<{ id: number; body: string | null; html_url: string }>
+    >(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/issues/${pullNumber}/comments?per_page=100`
+    );
+    const existing = comments.find((comment) => comment.body?.includes(marker));
+    if (existing) {
+      const updated = await this.request<{ id: number; html_url: string }>(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/issues/comments/${existing.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ body })
+        }
+      );
+      return { id: updated.id, htmlUrl: updated.html_url, action: "updated" };
+    }
+
+    const created = await this.request<{ id: number; html_url: string }>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/issues/${pullNumber}/comments`,
+      {
+        method: "POST",
+        body: JSON.stringify({ body })
+      }
+    );
+    return { id: created.id, htmlUrl: created.html_url, action: "created" };
+  }
+
   async mergePullRequest(
     input: MergePullRequestInput
   ): Promise<{ merged: boolean; message: string; sha: string | null }> {
@@ -220,7 +260,7 @@ export class GitHubClient {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${this.token}`,
         "Content-Type": "application/json",
-        "User-Agent": "RepoPilot/0.1",
+        "User-Agent": "RepoPilot/0.2",
         "X-GitHub-Api-Version": "2022-11-28",
         ...init.headers
       }

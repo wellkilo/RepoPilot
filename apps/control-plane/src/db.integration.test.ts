@@ -117,4 +117,79 @@ describe("RepoPilotStore integration", () => {
       store.sql`UPDATE evidence SET payload = '{"tampered":true}'::jsonb WHERE id = ${evidenceId}`
     ).rejects.toThrow("append-only");
   });
+
+  it("records an idempotent Agent Skill lifecycle in the evidence chain", async () => {
+    const run = await store.createRun({
+      source: {
+        type: "github_issue",
+        repository: "wellkilo/repopilot-testbed",
+        issueNumber: Math.floor(Date.now() / 1000) + 3
+      },
+      executionPolicy: "pull_request_only"
+    });
+    const input = {
+      runId: run.id,
+      agentName: "repopilot-lead" as const,
+      skillName: "repository-triage" as const,
+      idempotencyKey: "triage-attempt-1"
+    };
+    const [first, replay] = await Promise.all([store.startStep(input), store.startStep(input)]);
+
+    expect(replay.id).toBe(first.id);
+    const finished = await store.finishStep({
+      stepId: first.id,
+      status: "succeeded",
+      summary: "Issue reproduced and acceptance DAG recorded."
+    });
+    const repeatedFinish = await store.finishStep({
+      stepId: first.id,
+      status: "succeeded",
+      summary: "Issue reproduced and acceptance DAG recorded."
+    });
+
+    expect(finished).toMatchObject({
+      changed: true,
+      step: {
+        status: "succeeded",
+        agentName: "repopilot-lead",
+        skillName: "repository-triage"
+      }
+    });
+    expect(repeatedFinish).toMatchObject({ changed: false, step: { id: first.id } });
+    expect(await store.listSteps(run.id)).toHaveLength(1);
+    expect(
+      (await store.listEvidence(run.id)).filter(
+        (entry) =>
+          entry.evidenceType === "agent_message" &&
+          (entry.payload.event === "step_started" || entry.payload.event === "step_finished")
+      )
+    ).toHaveLength(2);
+    expect(await store.verifyEvidenceChain(run.id)).toBe(true);
+  });
+
+  it("rejects reusing a Step idempotency key for a different Agent or Skill", async () => {
+    const run = await store.createRun({
+      source: {
+        type: "github_issue",
+        repository: "wellkilo/repopilot-testbed",
+        issueNumber: Math.floor(Date.now() / 1000) + 4
+      },
+      executionPolicy: "pull_request_only"
+    });
+    await store.startStep({
+      runId: run.id,
+      agentName: "repopilot-lead",
+      skillName: "repository-triage",
+      idempotencyKey: "shared-key"
+    });
+
+    await expect(
+      store.startStep({
+        runId: run.id,
+        agentName: "repopilot-locator",
+        skillName: "root-cause-localization",
+        idempotencyKey: "shared-key"
+      })
+    ).rejects.toThrow("already bound");
+  });
 });

@@ -203,9 +203,77 @@ Packages：
 
 ```text
 <endpoint>/v1/traces
+<endpoint>/v1/metrics
 ```
 
 未配置时设置 `OTEL_TRACES_EXPORTER=none`，不发起网络调用。
+
+RepoPilot 业务语义：
+
+- `repopilot.run.create_and_dispatch`：输入解析、GitHub 上下文读取与 Matrix 派发；
+- `mcp.tool.<tool-name>`：每个 MCP 工具调用，包含成功、失败和耗时；
+- `agent.skill.<skill-name>`：根据持久化 Step 起止时间生成 Agent Skill Span；
+- `repopilot.run`：从 Run 创建到成功、失败或取消的端到端 Span。
+
+核心属性：
+
+```text
+repopilot.run_id
+repopilot.step_id
+repopilot.agent.name
+repopilot.skill.name
+repopilot.repository
+repopilot.outcome
+gen_ai.operation.name
+gen_ai.tool.name
+```
+
+核心 Metrics：
+
+```text
+repopilot.operations
+repopilot.operation.duration
+repopilot.skill.executions
+repopilot.skill.duration
+repopilot.runs.completed
+repopilot.run.duration
+```
+
+NodeSDK 自带 OTLP Metrics exporter；配置 endpoint 时通过环境契约启用
+`OTEL_METRICS_EXPORTER=otlp`。
+
+## Proof Bundle Evaluator
+
+`GET /api/v1/runs/{runId}/proof` 将 Run、Step、Approval 和完整 Evidence 链封装为
+`schemaVersion=1.0` 的 Proof Bundle。`packages/contracts/src/proof.ts` 使用纯函数执行
+确定性评测，CLI 与服务端共享同一实现：
+
+```bash
+pnpm build
+pnpm evaluate artifacts/proof-bundle.json artifacts/evaluation-report.json
+```
+
+评测器不调用模型，不依赖外部 API，不对补丁语义正确性做越权推断。
+
+## Pull Request Proof Publication
+
+`repopilot_publish_proof_comment` 将 Proof Bundle 的脱敏摘要实际附着到 Pull Request。
+调用链为：
+
+```text
+AgentTeams Archivist
+  -> RepoPilot MCP
+  -> load Run / Step / Approval / Evidence
+  -> verify SHA-256 chain
+  -> deterministic Proof evaluation
+  -> render redacted Markdown
+  -> GitHub Issue Comments REST API
+```
+
+评论以 `runId` 派生的 HTML marker 定位；已存在时使用 `PATCH` 更新，否则使用 `POST`
+创建。评论不包含原始 Evidence payload、工具输出或仓库私有内容，只发布评分、
+Agent/Skill 结果、证据数量和链根，并附带等价的机器可解析 JSON 摘要。Run 未进入
+终态、仓库不匹配或目标 PR 未记录在该 Run 的证据中时拒绝发布。
 
 ## Alibaba Cloud Official Skill
 

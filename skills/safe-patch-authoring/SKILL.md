@@ -3,7 +3,7 @@ name: safe-patch-authoring
 description: Use only after a root cause is evidenced to create the smallest patch, focused tests, a dedicated branch and commit, and optionally a pull request under the pull_request_only policy.
 license: Apache-2.0
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   owner: repopilot
   stage: repair
 ---
@@ -33,6 +33,10 @@ Record git references and pull request details using RepoPilot evidence tools.
 ## Invocation Conditions
 
 Use only after Locator has confirmed a root cause. Do not invoke for unsupported speculation.
+
+Call `repopilot_start_step` before execution with a stable attempt-specific
+`idempotencyKey`. Call `repopilot_finish_step` exactly once with the final
+`succeeded`, `failed`, `blocked`, or `skipped` outcome.
 
 ## Dependencies
 
