@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam。在线 Demo 可回放真实 Issue、根因定位、最小补丁、CI 验证与 Pull Request 证据。"
+      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam。在线 Demo 展示多 Agent 接力、多文件修复、独立验证与 Human-gated PR。"
     />
     <meta
       name="keywords"
@@ -371,13 +371,36 @@
         <div class="section-shell">
           <div class="section-heading reveal">
             <div>
-              <div class="section-index">02 / VERIFIED DEMO</div>
-              <p class="section-kicker">A real run, replayed from evidence</p>
-              <h2 id="demo-title">六步回放一次真实修复</h2>
+              <div class="section-index">02 / INTERACTIVE DEMO</div>
+              <p class="section-kicker">Issue → Agent handoffs → multi-file patch → verified PR</p>
+              <h2 id="demo-title">一次看清复杂修复如何安全落地</h2>
             </div>
             <p>
-              无需连接模型或登录控制台即可体验。下方内容来自真实 RepoPilot Run： Issue #1
-              被定位并以一行补丁修复，PR #2 的 CI 已通过，且没有自动合并。
+              先通过复合场景观察五个文件如何共同解决 webhook 重放，再切换到已验证 Run 核对真实
+              PR、CI 与 16 条 Evidence。两种视图都无需模型服务或管理员账号。
+            </p>
+          </div>
+
+          <div class="demo-mode-switch reveal" data-delay="80" role="tablist" aria-label="演示模式">
+            <button
+              class="is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-demo-mode="scenario"
+            >
+              <span>SCENARIO</span>
+              <strong>复合场景演练</strong>
+              <small>并发 webhook 幂等修复 · 5 files</small>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-demo-mode="verified">
+              <span>VERIFIED</span>
+              <strong>已验证 Run #1</strong>
+              <small>真实 PR #2 · 16 evidence</small>
+            </button>
+            <p data-demo-disclosure>
+              演练内容取自 RepoPilot 当前真实实现与测试，用于完整展示多 Agent
+              协作；右侧模式提供可外部核验的线上 Run。
             </p>
           </div>
 
@@ -386,127 +409,124 @@
               <div>
                 <span class="demo-live-mark" aria-hidden="true"></span>
                 <div>
-                  <small>REPOSITORY MAINTENANCE RUN</small>
-                  <strong>wellkilo/repopilot-testbed · Issue #1</strong>
+                  <small data-demo-run-kind>INTERACTIVE SCENARIO</small>
+                  <strong data-demo-repository>wellkilo/RepoPilot · Webhook replay incident</strong>
                 </div>
               </div>
               <div class="demo-run-facts" aria-label="运行摘要">
-                <span>RUN <strong>11c63758</strong></span>
-                <span>TRACE <strong>332f8652f35d</strong></span>
-                <span class="is-success">SUCCEEDED</span>
+                <span>POLICY <strong>PR ONLY</strong></span>
+                <span data-demo-files>5 FILES</span>
+                <span class="is-success" data-demo-run-status>READY TO REPLAY</span>
               </div>
             </header>
 
-            <div class="demo-player">
-              <div class="demo-timeline" role="tablist" aria-label="真实运行阶段">
-                <button
-                  class="is-active"
-                  type="button"
-                  role="tab"
-                  aria-selected="true"
-                  aria-controls="demo-scene"
-                  data-demo-step="0"
-                >
-                  <span>01</span>
-                  <strong>Issue</strong>
-                  <small>接收任务</small>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="demo-scene"
-                  data-demo-step="1"
-                >
-                  <span>02</span>
-                  <strong>Locate</strong>
-                  <small>证明根因</small>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="demo-scene"
-                  data-demo-step="2"
-                >
-                  <span>03</span>
-                  <strong>Patch</strong>
-                  <small>最小修复</small>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="demo-scene"
-                  data-demo-step="3"
-                >
-                  <span>04</span>
-                  <strong>Verify</strong>
-                  <small>独立验证</small>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="demo-scene"
-                  data-demo-step="4"
-                >
-                  <span>05</span>
-                  <strong>PR</strong>
-                  <small>安全交付</small>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="demo-scene"
-                  data-demo-step="5"
-                >
-                  <span>06</span>
-                  <strong>Archive</strong>
-                  <small>沉淀证据</small>
-                </button>
+            <div
+              class="demo-flightline"
+              role="tablist"
+              aria-label="演示运行阶段"
+              data-demo-timeline
+            >
+              <button
+                class="is-active"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="demo-scene"
+                data-demo-step="0"
+              >
+                <span>01</span><strong>Issue</strong><small>接收事件</small>
+              </button>
+            </div>
+
+            <article class="demo-workbench" id="demo-scene" role="tabpanel" aria-live="polite">
+              <div class="demo-brief">
+                <div class="demo-scene-meta">
+                  <span data-demo-owner>REPO LEAD</span>
+                  <strong data-demo-status>INCIDENT ACCEPTED</strong>
+                </div>
+                <h3 data-demo-title>同一 webhook 被并发投递两次</h3>
+                <p data-demo-copy>
+                  GitHub 重试触发两个相同 delivery。RepoPilot 接受任务，但必须证明最终只创建一个
+                  Run、一次 AgentTeams dispatch 和一条输入证据。
+                </p>
+                <dl class="demo-evidence-grid">
+                  <div>
+                    <dt>EVIDENCE</dt>
+                    <dd data-demo-evidence>01 · task_input</dd>
+                  </div>
+                  <div>
+                    <dt>ARTIFACT</dt>
+                    <dd data-demo-artifact>Webhook delivery</dd>
+                  </div>
+                  <div>
+                    <dt>BOUNDARY</dt>
+                    <dd data-demo-boundary>PR only</dd>
+                  </div>
+                </dl>
+                <div class="demo-agent-handoff" aria-label="Agent 协作路径">
+                  <span class="is-active" data-demo-agent="lead" aria-label="Repo Lead">L</span>
+                  <i aria-hidden="true"></i>
+                  <span data-demo-agent="locator" aria-label="Locator">X</span>
+                  <i aria-hidden="true"></i>
+                  <span data-demo-agent="fixer" aria-label="Fixer">F</span>
+                  <i aria-hidden="true"></i>
+                  <span data-demo-agent="verifier" aria-label="Verifier">V</span>
+                  <i aria-hidden="true"></i>
+                  <span data-demo-agent="archivist" aria-label="Archivist">A</span>
+                </div>
               </div>
 
-              <article class="demo-scene" id="demo-scene" role="tabpanel" aria-live="polite">
-                <div class="demo-scene-copy">
-                  <div class="demo-scene-meta">
-                    <span data-demo-owner>REPO LEAD</span>
-                    <strong data-demo-status>INPUT ACCEPTED</strong>
-                  </div>
-                  <h3 data-demo-title>合法的 0 分被错误改写为 1 分</h3>
-                  <p data-demo-copy>
-                    RepoPilot 读取 GitHub Issue，锁定执行策略为
-                    pull_request_only，并把验收标准交给维护团队。
-                  </p>
-                  <dl class="demo-evidence-grid">
-                    <div>
-                      <dt>EVIDENCE</dt>
-                      <dd data-demo-evidence>01 · task_input</dd>
-                    </div>
-                    <div>
-                      <dt>ARTIFACT</dt>
-                      <dd data-demo-artifact>Issue #1</dd>
-                    </div>
-                    <div>
-                      <dt>BOUNDARY</dt>
-                      <dd data-demo-boundary>PR only</dd>
-                    </div>
-                  </dl>
+              <div class="demo-editor" aria-label="当前阶段文件与补丁">
+                <div class="demo-editor-tabs" data-demo-file-tabs>
+                  <button class="is-active" type="button" data-demo-file-tab="0">
+                    incident.json
+                  </button>
                 </div>
-
-                <div class="demo-terminal" aria-label="当前阶段证据片段">
-                  <div class="demo-terminal-bar">
-                    <span></span><span></span><span></span>
-                    <strong data-demo-terminal-label>source-context.json</strong>
-                  </div>
-                  <pre><code data-demo-code>{
-  "repository": "wellkilo/repopilot-testbed",
-  "issueNumber": 1,
-  "executionPolicy": "pull_request_only"
+                <div class="demo-editor-meta">
+                  <span data-demo-editor-label>incident.json</span>
+                  <span data-demo-change-summary>2 deliveries · same ID</span>
+                </div>
+                <pre><code data-demo-code>{
+  "delivery": "7e91…c8a4",
+  "attempts": 2,
+  "expectedRuns": 1
 }</code></pre>
+              </div>
+
+              <aside class="demo-proof-rail">
+                <div class="demo-proof-head">
+                  <span>LIVE EVIDENCE</span>
+                  <strong data-demo-proof-count>01 / 20</strong>
                 </div>
-              </article>
+                <ol data-demo-proof-list>
+                  <li class="is-complete">
+                    <span>01</span>
+                    <p>Webhook 验签通过</p>
+                  </li>
+                  <li>
+                    <span>02</span>
+                    <p>等待 Agent 分诊</p>
+                  </li>
+                  <li>
+                    <span>03</span>
+                    <p>等待根因证据</p>
+                  </li>
+                  <li>
+                    <span>04</span>
+                    <p>等待验证结果</p>
+                  </li>
+                </ol>
+                <div class="demo-policy-gate" data-demo-policy-state="locked">
+                  <span>HUMAN GATE</span>
+                  <strong data-demo-gate-title>MERGE LOCKED</strong>
+                  <p data-demo-gate-copy>系统可创建 PR，但不能自行合并。</p>
+                </div>
+              </aside>
+            </article>
+
+            <div class="demo-run-log">
+              <span data-demo-terminal-label>event://github/issues.opened</span>
+              <code data-demo-log>delivery 7e91…c8a4 received twice · deduplication required</code>
             </div>
 
             <footer class="demo-console-foot">
@@ -515,37 +535,59 @@
               </div>
               <button class="demo-play" type="button" data-demo-play aria-pressed="false">
                 <span data-demo-play-icon>▶</span>
-                <span data-demo-play-label>播放完整 Run</span>
+                <span data-demo-play-label>播放完整演示</span>
               </button>
-              <span class="demo-chain">16 EVIDENCE · CHAIN VALID</span>
+              <span class="demo-chain" data-demo-chain>SCENARIO · CURRENT IMPLEMENTATION</span>
             </footer>
           </div>
 
           <div class="demo-outcomes reveal" data-delay="160">
             <article>
               <strong>5</strong>
-              <span>CoPaw Workers</span>
-              <small>Repo Lead + 4 specialists</small>
+              <span>Agent 职责隔离</span>
+              <small>Lead → Locator → Fixer → Verifier → Archivist</small>
             </article>
             <article>
-              <strong>1 file</strong>
-              <span>Minimal patch</span>
-              <small>+1 / -1</small>
+              <strong>5 files</strong>
+              <span>跨层幂等修复</span>
+              <small>Route + Schema + Store + Service + Test</small>
             </article>
             <article>
-              <strong>SUCCESS</strong>
-              <span>GitHub Actions</span>
-              <small>typecheck + test</small>
+              <strong>2 → 1</strong>
+              <span>并发投递收敛</span>
+              <small>One Run · One dispatch · One evidence</small>
             </article>
             <article>
-              <strong>OPEN</strong>
-              <span>Pull Request #2</span>
-              <small>Clean · not auto-merged</small>
+              <strong>PR ONLY</strong>
+              <span>自治安全边界</span>
+              <small>Merge remains human-controlled</small>
             </article>
           </div>
 
+          <div class="demo-video-card reveal" data-delay="190">
+            <div>
+              <span class="section-kicker">Recorded walkthrough</span>
+              <h3>不到半分钟，看完从故障到 Verified PR</h3>
+              <p>
+                视频按实际操作顺序展示 Agent 接力、多文件补丁、并发回归测试、Evidence
+                累积与人工合并门禁；可全屏播放，也可下载 MP4 用于路演。
+              </p>
+              <a href="./assets/demo/repopilot-agentteam-demo.mp4" download>下载高清 MP4 ↓</a>
+            </div>
+            <video
+              controls
+              muted
+              playsinline
+              preload="metadata"
+              poster="./assets/demo/repopilot-agentteam-demo-poster.webp"
+            >
+              <source src="./assets/demo/repopilot-agentteam-demo.mp4" type="video/mp4" />
+              当前浏览器不支持视频播放，可使用左侧链接下载 MP4。
+            </video>
+          </div>
+
           <div class="demo-links reveal" data-delay="220">
-            <span>查看外部证据</span>
+            <span>核验真实 Run</span>
             <a
               href="https://github.com/wellkilo/repopilot-testbed/pull/2"
               target="_blank"

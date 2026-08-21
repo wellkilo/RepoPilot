@@ -75,27 +75,28 @@
 <div align="center">
   <a href="https://wellkilo.github.io/RepoPilot/#demo">
     <img
-      src="docs/assets/demo/repopilot-workflow.gif"
+      src="docs/assets/demo/repopilot-agentteam-demo.gif"
       width="100%"
-      alt="RepoPilot 使用流程：Issue、Triage、Locate、Patch、Verify、Verified PR"
+      alt="RepoPilot 完整演示：Webhook 事件、Agent 分诊、根因定位、多文件补丁、并发验证与安全 PR"
     />
   </a>
   <p>
     <sub>
-      Issue → Repo Lead 分诊 → Locator 定位 → Fixer 最小修复 → Verifier 独立验证 → Verified PR
+      Issue → Repo Lead 分诊 → Locator 证明竞态 → Fixer 跨层修复 → Verifier 并发验证 → Human-gated PR
     </sub>
   </p>
   <p>
-    <a href="https://wellkilo.github.io/RepoPilot/#demo"><strong>回放真实 Issue → PR Run ↗</strong></a>
+    <a href="https://wellkilo.github.io/RepoPilot/#demo"><strong>打开双模式交互 Demo ↗</strong></a>
+    ·
+    <a href="docs/assets/demo/repopilot-agentteam-demo.mp4">观看高清 MP4</a>
     ·
     <a href="https://wellkilo.github.io/RepoPilot/#loop">查看 8 阶段系统闭环</a>
-    ·
-    <a href="docs/assets/demo/repopilot-workflow.mp4">下载高清 MP4</a>
   </p>
 </div>
 
-> 在线 Demo 无需模型服务或管理员账号，基于真实 Run 回放 Issue 输入、根因定位、
-> 一行补丁、GitHub Actions 验证、PR #2 与 16 条 Evidence。
+> 在线 Demo 无需模型服务或管理员账号。默认模式基于 RepoPilot 当前真实幂等实现，
+> 完整演示 `Route + Schema + Store + Service + Test` 五文件修复；切换到“已验证 Run #1”可回放
+> 真实 Issue、PR #2、GitHub Actions 与 16 条 Evidence，并通过外部链接逐项核验。
 
 ## 维护闭环
 

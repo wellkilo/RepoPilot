@@ -18,8 +18,22 @@ Open:
 https://wellkilo.github.io/RepoPilot/#demo
 ```
 
-The public demo replays the verified run from evidence. It does not require a
-model API key, GitHub credential, or AgentTeams administrator account.
+The public demo has two explicitly separated modes:
+
+- **Interactive scenario** replays the webhook-delivery idempotency path that
+  exists in the current RepoPilot code and tests. It shows the route, schema,
+  store, service, and integration-test changes as one AgentTeam handoff.
+- **Verified Run #1** replays the externally verifiable testbed repair linked
+  in the Target section.
+
+Neither mode requires a model API key, GitHub credential, or AgentTeams
+administrator account.
+
+Recorded walkthrough:
+
+```text
+https://wellkilo.github.io/RepoPilot/assets/demo/repopilot-agentteam-demo.mp4
+```
 
 ## Expected Agent Flow
 
