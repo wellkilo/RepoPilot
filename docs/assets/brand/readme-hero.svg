@@ -28,27 +28,28 @@
     <circle cx="90" cy="21" r="6" fill="#75df9b" filter="url(#glow)"/>
   </g>
   <text x="214" y="190" fill="#eaf3ff" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="700" letter-spacing="-3">RepoPilot</text>
-  <text x="76" y="310" fill="#49d6d0" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700">从 Issue 到 Verified PR</text>
-  <text x="76" y="367" fill="#c2d1df" font-family="Arial, Helvetica, sans-serif" font-size="30">不跳过任何证据</text>
-  <text x="76" y="423" fill="#7f96aa" font-family="Arial, Helvetica, sans-serif" font-size="21">五个 Agent 在可审批、可回放、可回滚的边界内协作</text>
-  <g transform="translate(76 493)">
+  <text x="76" y="300" fill="#49d6d0" font-family="Arial, Helvetica, sans-serif" font-size="45" font-weight="700">Issue → Verified PR</text>
+  <text x="76" y="352" fill="#65a8ff" font-family="Arial, Helvetica, sans-serif" font-size="35" font-weight="700">Pull Request → Review Comment</text>
+  <text x="76" y="405" fill="#c2d1df" font-family="Arial, Helvetica, sans-serif" font-size="25">双闭环，不跳过任何证据</text>
+  <text x="76" y="442" fill="#7f96aa" font-family="Arial, Helvetica, sans-serif" font-size="18">六个 Agent · 固定 revision · 幂等评论 · 人类掌握合并权</text>
+  <g transform="translate(76 505)">
     <rect width="210" height="70" rx="8" fill="#0c1824" stroke="#22384b"/>
-    <text x="22" y="30" fill="#49d6d0" font-family="monospace" font-size="15">5 AGENTS</text>
+    <text x="22" y="30" fill="#49d6d0" font-family="monospace" font-size="15">6 AGENTS</text>
     <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">SEPARATION OF DUTIES</text>
   </g>
-  <g transform="translate(304 493)">
+  <g transform="translate(304 505)">
     <rect width="210" height="70" rx="8" fill="#0c1824" stroke="#22384b"/>
-    <text x="22" y="30" fill="#65a8ff" font-family="monospace" font-size="15">8 MCP TOOLS</text>
+    <text x="22" y="30" fill="#65a8ff" font-family="monospace" font-size="15">14 MCP TOOLS</text>
     <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">TYPED CONTRACTS</text>
   </g>
-  <g transform="translate(532 493)">
+  <g transform="translate(532 505)">
     <rect width="250" height="70" rx="8" fill="#0c1824" stroke="#22384b"/>
-    <text x="22" y="30" fill="#75df9b" font-family="monospace" font-size="15">CHAIN VERIFIED</text>
-    <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">APPEND-ONLY EVIDENCE</text>
+    <text x="22" y="30" fill="#75df9b" font-family="monospace" font-size="15">MANAGED COMMENT</text>
+    <text x="22" y="53" fill="#7f96aa" font-family="monospace" font-size="11">STALE SHA BLOCKED</text>
   </g>
   <g transform="translate(882 128)">
     <rect width="646" height="442" fill="#091621" stroke="#2d5269" stroke-width="2"/>
-    <text x="28" y="38" fill="#7f96aa" font-family="monospace" font-size="12" letter-spacing="2">VERIFIED RUN · 11c63758</text>
+    <text x="28" y="38" fill="#7f96aa" font-family="monospace" font-size="12" letter-spacing="2">DUAL LOOP · AUDITABLE DELIVERY</text>
     <circle cx="592" cy="32" r="7" fill="#75df9b" filter="url(#glow)"/>
     <path d="M28 58H618" stroke="#22384b"/>
     <g transform="translate(30 91)">
@@ -86,14 +87,14 @@
       <text x="12" y="61" fill="#75df9b" font-family="monospace" font-size="8">VERIFIED</text>
     </g>
     <rect x="30" y="196" width="588" height="183" fill="#071019" stroke="#22384b"/>
-    <text x="52" y="229" fill="#49d6d0" font-family="monospace" font-size="12">EVIDENCE · CI RESULT</text>
-    <text x="52" y="271" fill="#eaf3ff" font-family="Arial" font-size="24" font-weight="700">PR #2 open. CI passed.</text>
-    <text x="52" y="309" fill="#7f96aa" font-family="Arial" font-size="15">1 file · +1/-1 · no auto-merge</text>
+    <text x="52" y="229" fill="#65a8ff" font-family="monospace" font-size="12">REVIEW PUBLICATION · HEAD a215065</text>
+    <text x="52" y="271" fill="#eaf3ff" font-family="Arial" font-size="24" font-weight="700">RepoPilot PR Review · PASS</text>
+    <text x="52" y="309" fill="#7f96aa" font-family="Arial" font-size="15">7 / 7 checks · no blocking findings · comment only</text>
     <path d="M52 336H596" stroke="#22384b"/>
-    <text x="52" y="360" fill="#547086" font-family="monospace" font-size="10">COMMIT dd67868d</text>
-    <text x="415" y="360" fill="#75df9b" font-family="monospace" font-size="10">16 EVIDENCE</text>
-    <text x="30" y="414" fill="#547086" font-family="monospace" font-size="10">TRACE 332f8652f35d</text>
-    <text x="480" y="414" fill="#75df9b" font-family="monospace" font-size="10">CHAIN VERIFIED</text>
+    <text x="52" y="360" fill="#547086" font-family="monospace" font-size="10">&lt;!-- repopilot-review --&gt;</text>
+    <text x="430" y="360" fill="#75df9b" font-family="monospace" font-size="10">CREATE OR UPDATE</text>
+    <text x="30" y="414" fill="#547086" font-family="monospace" font-size="10">READ ONLY · NO APPROVE · NO PATCH</text>
+    <text x="458" y="414" fill="#75df9b" font-family="monospace" font-size="10">STALE SHA BLOCKED</text>
   </g>
   <text x="76" y="626" fill="#547086" font-family="monospace" font-size="14">wellkilo.github.io/RepoPilot</text>
 </svg>

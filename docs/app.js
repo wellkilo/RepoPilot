@@ -47,6 +47,7 @@ const demoModes = {
     repository: "wellkilo/repopilot-testbed · Issue #3 → PR #4",
     fileSummary: "5 FILES",
     runStatus: "CI PASSED · PR OPEN",
+    agentOrder: ["lead", "locator", "fixer", "verifier", "archivist"],
     disclosure:
       "Issue、失败基线、修复提交、CI 和 PR 均可在 GitHub 核验；Agent 交接是依据这些公开产物构建的确定性流程回放。",
     chain: "8 EVIDENCE STEPS · PR #4 OPEN",
@@ -401,6 +402,7 @@ concurrent same ID + sequential retry
     repository: "wellkilo/repopilot-testbed · Issue #1",
     fileSummary: "1 FILE",
     runStatus: "SUCCEEDED",
+    agentOrder: ["lead", "locator", "fixer", "verifier", "archivist"],
     disclosure:
       "该模式逐项回放真实 Run。PR #2、GitHub Actions Run 31793190761 与 16 条 Evidence 均可通过下方链接核验。",
     chain: "16 EVIDENCE · CHAIN VALID",
@@ -624,6 +626,266 @@ Evidence: 16 · VALID`
         ]
       }
     ]
+  },
+  review: {
+    runKind: "PULL REQUEST → MANAGED COMMENT · CAPABILITY WALKTHROUGH",
+    repository: "wellkilo/repopilot-testbed · Pull Request #4",
+    fileSummary: "5 CHANGED FILES",
+    runStatus: "REVIEW COMMENT READY",
+    agentOrder: ["reviewer"],
+    disclosure:
+      "该模式按已实现的真实 GitHub REST、MCP、数据库与安全契约回放 PR 自动审查能力；不会声称已执行未发生的 approve、改代码或 merge。",
+    chain: "6 REVIEW STEPS · IMMUTABLE HEAD",
+    playLabel: "播放 PR → Comment",
+    outcomes: [
+      ["4 events", "自动触发", "opened · reopened · synchronize · ready_for_review"],
+      ["HEAD SHA", "版本固定", "stale review is rejected before publication"],
+      ["1 comment", "幂等更新", "<!-- repopilot-review -->"],
+      ["READ ONLY", "Reviewer 边界", "No approve · no patch · no merge"]
+    ],
+    steps: [
+      {
+        label: "PR Event",
+        caption: "接收事件",
+        owner: "CONTROL PLANE",
+        agent: "reviewer",
+        status: "WEBHOOK VERIFIED",
+        title: "Pull Request 更新触发独立审查 Run",
+        copy: "Control Plane 验证 X-Hub-Signature-256、仓库 allowlist、动作类型和 Draft 状态，只为可执行的 PR 事件创建 github_pull_request Run。",
+        evidence: "01 · task_input",
+        artifact: "pull_request.synchronize",
+        boundary: "Draft ignored",
+        changeSummary: "signed event · allowlisted repo",
+        terminalLabel: "event://github/pull_request.synchronize",
+        log: "signature valid · draft false · action synchronize · accepted",
+        proofCount: "01 / 06",
+        proof: [
+          ["done", "Webhook HMAC 已验证"],
+          ["next", "等待固定 head SHA"],
+          ["next", "等待 Diff / Checks"],
+          ["next", "等待托管评论"]
+        ],
+        gateTitle: "READ-ONLY REVIEW",
+        gateCopy: "该 Run 不能执行维护 Skill 或申请高风险审批。",
+        files: [
+          {
+            label: "webhook.json",
+            code: `{
+  "action": "synchronize",
+  "repository": "wellkilo/repopilot-testbed",
+  "pullNumber": 4,
+  "draft": false,
+  "headSha": "a215065..."
+}`
+          }
+        ]
+      },
+      {
+        label: "Revision",
+        caption: "固定版本",
+        owner: "REVIEWER",
+        agent: "reviewer",
+        status: "HEAD SHA LOCKED",
+        title: "审查上下文绑定不可变 head SHA",
+        copy: "Reviewer 读取 PR 元数据并把 Run、仓库、PR 编号与 head SHA 绑定。发布前会再次读取 GitHub 当前 revision；新提交会让旧审查失效。",
+        evidence: "02 · review_context",
+        artifact: "head a215065",
+        boundary: "Stale publish denied",
+        changeSummary: "run + pull + revision",
+        terminalLabel: "mcp://github_get_pull_request",
+        log: "run head == input head == GitHub head · revision locked",
+        proofCount: "02 / 06",
+        proof: [
+          ["done", "Run 来源已匹配"],
+          ["done", "PR 编号已匹配"],
+          ["done", "head SHA 已固定"],
+          ["next", "开始读取变更"]
+        ],
+        gateTitle: "STALE REVIEW BLOCKED",
+        gateCopy: "任何 head SHA 不一致都会在写评论前拒绝。",
+        files: [
+          {
+            label: "source-context.json",
+            code: `{
+  "type": "github_pull_request",
+  "repository": "wellkilo/repopilot-testbed",
+  "pullNumber": 4,
+  "headSha": "a215065..."
+}`
+          }
+        ]
+      },
+      {
+        label: "Diff",
+        caption: "分页读取",
+        owner: "REVIEWER",
+        agent: "reviewer",
+        status: "CHANGES LOADED",
+        title: "分页读取所有 changed files，而不是只看首页",
+        copy: "Reviewer 通过 GitHub REST 拉取 PR 文件列表和补丁摘要，直到确认分页完整；文件过多、补丁截断或响应异常都会作为审查限制写入结论。",
+        evidence: "03 · tool_result",
+        artifact: "5 changed files",
+        boundary: "Read GitHub only",
+        changeSummary: "5 files · +75 / -22",
+        terminalLabel: "mcp://github_list_pull_request_files",
+        log: "page 1 complete · 5 files · additions 75 · deletions 22",
+        proofCount: "03 / 06",
+        proof: [
+          ["done", "PR 元数据已读取"],
+          ["done", "Changed files 已完整分页"],
+          ["done", "补丁规模已记录"],
+          ["next", "读取 Checks"]
+        ],
+        gateTitle: "NO CODE WRITE",
+        gateCopy: "Reviewer 没有分支、提交或文件修改能力。",
+        files: [
+          {
+            label: "changed-files.json",
+            code: `[
+  "src/webhooks/types.ts",
+  "src/webhooks/store.ts",
+  "src/webhooks/processor.ts",
+  "src/webhooks/processor.test.ts",
+  "README.md"
+]
+
+Diff: +75 / -22`
+          },
+          {
+            label: "store.patch",
+            code: `+ const pending = inFlight.get(deliveryId);
++ if (pending) return reuse(pending);
++
++ const creation = createTask()
++   .finally(() => inFlight.delete(deliveryId));`
+          }
+        ]
+      },
+      {
+        label: "Checks",
+        caption: "验证状态",
+        owner: "REVIEWER",
+        agent: "reviewer",
+        status: "CHECKS COLLECTED",
+        title: "审查结论同时引用 GitHub Checks",
+        copy: "Reviewer 不把语言模型判断冒充测试结果。Check Runs 被作为独立事实读取，成功、失败、进行中或缺失都会原样进入结构化 Review。",
+        evidence: "04 · verification",
+        artifact: "7 / 7 passed",
+        boundary: "No fabricated result",
+        changeSummary: "CI conclusion SUCCESS",
+        terminalLabel: "github://checks/a215065",
+        log: "typecheck success · test success · 7 / 7 passed",
+        proofCount: "04 / 06",
+        proof: [
+          ["done", "Diff 已完整读取"],
+          ["done", "Check Runs 已读取"],
+          ["done", "CI 事实已关联 revision"],
+          ["next", "生成 Review verdict"]
+        ],
+        gateTitle: "FACTS SEPARATED",
+        gateCopy: "Checks 是外部事实，Reviewer 只负责解释风险。",
+        files: [
+          {
+            label: "checks.json",
+            code: `{
+  "headSha": "a215065...",
+  "status": "completed",
+  "conclusion": "success",
+  "tests": "7 / 7 passed"
+}`
+          }
+        ]
+      },
+      {
+        label: "Review",
+        caption: "结构化结论",
+        owner: "REVIEWER",
+        agent: "reviewer",
+        status: "VERDICT READY",
+        title: "Reviewer 产出有上限、有严重度的 Findings",
+        copy: "pull-request-review Skill 输出 verdict、summary、checks、limitations 与最多 20 条 findings。每条发现包含 severity、文件、行号、证据和可执行建议。",
+        evidence: "05 · decision",
+        artifact: "verdict pass",
+        boundary: "Max 20 findings",
+        changeSummary: "0 blocking findings",
+        terminalLabel: "skill://pull-request-review",
+        log: "verdict pass · critical 0 · high 0 · limitations 0",
+        proofCount: "05 / 06",
+        proof: [
+          ["done", "当前 revision 已确认"],
+          ["done", "Diff 与 Checks 已关联"],
+          ["done", "Findings Schema 已验证"],
+          ["next", "等待发布托管评论"]
+        ],
+        gateTitle: "COMMENT ONLY",
+        gateCopy: "结论不会转换成 approve 或 request changes。",
+        files: [
+          {
+            label: "review-result.json",
+            code: `{
+  "verdict": "pass",
+  "summary": "Concurrency fix is scoped and verified.",
+  "checks": ["7 / 7 passed"],
+  "findings": [],
+  "limitations": []
+}`
+          }
+        ]
+      },
+      {
+        label: "Comment",
+        caption: "幂等发布",
+        owner: "REVIEWER",
+        agent: "reviewer",
+        status: "MANAGED COMMENT",
+        title: "创建或更新同一条 RepoPilot Review Comment",
+        copy: "发布工具跨页查找固定 marker，存在时更新原评论，不存在且已完整扫描时才创建。成功后追加 review_publication Evidence 并结束 Run。",
+        evidence: "06 · review_publication",
+        artifact: "managed issue comment",
+        boundary: "No approve · no merge",
+        changeSummary: "1 marker · 1 comment",
+        terminalLabel: "mcp://repopilot_publish_review_comment",
+        log: "marker found or created · publication recorded · run succeeded",
+        proofCount: "06 / 06",
+        proof: [
+          ["done", "当前 head SHA 再次核验"],
+          ["done", "Reviewer Step 状态已核验"],
+          ["done", "托管评论已创建或更新"],
+          ["done", "review_publication 已追加"]
+        ],
+        gateTitle: "REVIEW PUBLISHED · MERGE LOCKED",
+        gateCopy: "自动化在评论处停止，审批和合并仍由人类决定。",
+        files: [
+          {
+            label: "review-comment.md",
+            code: `<!-- repopilot-review -->
+## RepoPilot PR Review
+
+**Verdict:** PASS
+**Revision:** \`a215065\`
+**Checks:** 7 / 7 passed
+
+### Findings
+- No blocking findings.
+
+### Safety boundary
+Read-only review. No approval, code change,
+merge, branch deletion, permission change,
+or secret change was performed.`
+          },
+          {
+            label: "publication.json",
+            code: `{
+  "type": "review_publication",
+  "pullNumber": 4,
+  "headSha": "a215065...",
+  "mode": "create-or-update",
+  "marker": "<!-- repopilot-review -->"
+}`
+          }
+        ]
+      }
+    ]
   }
 };
 
@@ -825,7 +1087,7 @@ const demoElements = {
   playLabel: document.querySelector("[data-demo-play-label]")
 };
 
-const agentOrder = ["lead", "locator", "fixer", "verifier", "archivist"];
+const allAgents = ["lead", "locator", "fixer", "verifier", "archivist", "reviewer"];
 let activeDemoMode = "scenario";
 let activeDemoStep = 0;
 let demoTimer = null;
@@ -878,6 +1140,7 @@ const renderDemoProof = (proof) => {
 const renderDemoTimeline = () => {
   const mode = demoModes[activeDemoMode];
   demoElements.timeline.replaceChildren();
+  demoElements.timeline.style.setProperty("--demo-step-count", String(mode.steps.length));
   mode.steps.forEach((step, index) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -950,11 +1213,14 @@ const renderDemoStep = (index, animate = true) => {
   renderDemoFile(0);
   renderDemoProof(data.proof);
 
-  const activeAgentIndex = agentOrder.indexOf(data.agent);
+  const modeAgentOrder = mode.agentOrder ?? allAgents;
+  const activeAgentIndex = modeAgentOrder.indexOf(data.agent);
   document.querySelectorAll("[data-demo-agent]").forEach((agent) => {
-    const agentIndex = agentOrder.indexOf(agent.dataset.demoAgent);
+    const agentIndex = modeAgentOrder.indexOf(agent.dataset.demoAgent);
+    const participates = agentIndex >= 0;
     agent.classList.toggle("is-active", agent.dataset.demoAgent === data.agent);
-    agent.classList.toggle("is-complete", agentIndex >= 0 && agentIndex < activeAgentIndex);
+    agent.classList.toggle("is-complete", participates && agentIndex < activeAgentIndex);
+    agent.classList.toggle("is-out-of-path", !participates);
   });
 
   if (animate) {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam。在线 Demo 展示多 Agent 接力、多文件修复、独立验证与 Human-gated PR。"
+      content="RepoPilot 是基于 AgentTeams 的可审计仓库自治维护 AgentTeam。在线 Demo 展示 Issue 到 Verified PR，以及 Pull Request 到托管 Review Comment 的双闭环。"
     />
     <meta
       name="keywords"
@@ -14,7 +14,10 @@
     <meta name="theme-color" content="#071019" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="RepoPilot · 可审计仓库自治维护 AgentTeam" />
-    <meta property="og:description" content="从 Issue 到 Verified PR，不跳过任何证据。" />
+    <meta
+      property="og:description"
+      content="从 Issue 到 Verified PR，从 Pull Request 到 Review Comment。"
+    />
     <meta property="og:url" content="https://wellkilo.github.io/RepoPilot/" />
     <meta
       property="og:image"
@@ -88,15 +91,16 @@
               AgentTeams v1.2.2 · Agent Infra
             </div>
             <h1>
-              从 Issue 到
+              Issue 变成
               <span>Verified PR</span>
               <br />
-              不跳过任何证据
+              PR 得到 Review Comment
             </h1>
             <p class="hero-lead">
-              RepoPilot 让五个不同职能的 Agent 在
+              RepoPilot 让六个不同职能的 Agent 在
               <strong>可审批、可回放、可回滚</strong>
-              的边界内协作，把 GitHub 问题安全推进到携带可验证执行证明的 Pull Request。
+              的边界内协作：既把 GitHub 问题安全推进到携带执行证明的 Pull Request， 也在 PR
+              更新时自动完成只读审查并维护一条结构化评论。
             </p>
             <div class="hero-actions">
               <a class="button button-primary" href="#demo">
@@ -136,12 +140,12 @@
           <div class="flight-recorder reveal" data-delay="140">
             <div class="recorder-head">
               <div>
-                <span>PUBLIC ISSUE → PR</span>
-                <strong>TESTBED #3 → PR #4</strong>
+                <span>ISSUE → PR / PR → COMMENT</span>
+                <strong>TWO AUDITABLE AUTOMATION LOOPS</strong>
               </div>
               <div class="recorder-status">
                 <span></span>
-                public evidence · verifiable
+                immutable revision · managed comment
               </div>
             </div>
 
@@ -371,15 +375,15 @@
         <div class="section-shell">
           <div class="section-heading reveal">
             <div>
-              <div class="section-index">02 / PUBLIC ISSUE → PR</div>
+              <div class="section-index">02 / TWO AUTOMATION LOOPS</div>
               <p class="section-kicker">
-                One public defect, five changed files, one open pull request
+                Issue to verified delivery · Pull request to managed review comment
               </p>
-              <h2 id="demo-title">从真实 Issue 一路追到绿色 PR</h2>
+              <h2 id="demo-title">选择入口，回放完整执行链</h2>
             </div>
             <p>
-              默认回放公开测试床中的 Issue #3：红色基线稳定复现并发竞态，RepoPilot
-              通过五文件补丁完成修复，CI 转绿后创建 PR #4，并在人工合并门禁前停止。
+              Issue 模式展示从故障到绿色 PR；PR Review 模式展示如何固定 revision、读取 Diff 与
+              Checks、生成审查结论，并幂等创建或更新同一条 RepoPilot 评论。
             </p>
           </div>
 
@@ -399,6 +403,11 @@
               <span>HISTORICAL</span>
               <strong>历史最小案例</strong>
               <small>Issue #1 → 一行补丁 → PR #2</small>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-demo-mode="review">
+              <span>PR REVIEW</span>
+              <strong>Pull Request → Comment</strong>
+              <small>固定 SHA → Diff / Checks → 托管评论</small>
             </button>
             <p data-demo-disclosure>
               主模式中的 Issue、失败基线、提交、CI 和 PR 均来自公开的
@@ -477,6 +486,8 @@
                   <span data-demo-agent="verifier" aria-label="Verifier">V</span>
                   <i aria-hidden="true"></i>
                   <span data-demo-agent="archivist" aria-label="Archivist">A</span>
+                  <i aria-hidden="true"></i>
+                  <span data-demo-agent="reviewer" aria-label="Reviewer">R</span>
                 </div>
               </div>
 
@@ -568,6 +579,92 @@
             </article>
           </div>
 
+          <div class="review-showcase reveal" id="pr-review" data-delay="180">
+            <div class="review-route">
+              <span class="section-kicker">Pull Request automation</span>
+              <h3>PR 一有新提交，Reviewer 就重新检查当前 revision</h3>
+              <p>
+                这不是第二条修复链。Reviewer 只读取 PR、Changed Files 与 Checks，
+                生成结构化结论，并创建或更新同一条评论。
+              </p>
+              <ol>
+                <li>
+                  <span>01</span>
+                  <div>
+                    <strong>触发</strong>
+                    <small>opened · reopened · synchronize · ready_for_review</small>
+                  </div>
+                </li>
+                <li>
+                  <span>02</span>
+                  <div>
+                    <strong>固定版本</strong>
+                    <small>Run、PR 与 GitHub 当前 head SHA 必须一致</small>
+                  </div>
+                </li>
+                <li>
+                  <span>03</span>
+                  <div>
+                    <strong>只读审查</strong>
+                    <small>分页读取 Diff / Checks，最多输出 20 条 Findings</small>
+                  </div>
+                </li>
+                <li>
+                  <span>04</span>
+                  <div>
+                    <strong>幂等发布</strong>
+                    <small>固定 marker 命中原评论；旧 revision 禁止覆盖</small>
+                  </div>
+                </li>
+              </ol>
+              <a href="?demoMode=review#demo">
+                回放 PR → Comment 完整流程
+                <span aria-hidden="true">↑</span>
+              </a>
+            </div>
+
+            <article class="managed-comment" aria-label="RepoPilot PR 审查评论预览">
+              <header>
+                <div class="review-avatar">R</div>
+                <div>
+                  <strong>repopilot-reviewer</strong>
+                  <small>commented on revision a215065</small>
+                </div>
+                <span>MANAGED</span>
+              </header>
+              <div class="managed-comment-body">
+                <code>&lt;!-- repopilot-review --&gt;</code>
+                <h4>RepoPilot PR Review</h4>
+                <dl>
+                  <div>
+                    <dt>VERDICT</dt>
+                    <dd class="review-pass">PASS</dd>
+                  </div>
+                  <div>
+                    <dt>REVISION</dt>
+                    <dd>a215065</dd>
+                  </div>
+                  <div>
+                    <dt>CHECKS</dt>
+                    <dd>7 / 7 passed</dd>
+                  </div>
+                </dl>
+                <h5>Findings</h5>
+                <p>No blocking findings.</p>
+                <h5>Safety boundary</h5>
+                <p>
+                  Read-only review. No approval, code change, merge, branch deletion, permission
+                  change, or secret change was performed.
+                </p>
+              </div>
+              <footer>
+                <span>1 MARKER</span>
+                <span>CREATE OR UPDATE</span>
+                <span>STALE SHA BLOCKED</span>
+              </footer>
+            </article>
+          </div>
+
           <div class="demo-video-card reveal" data-delay="190">
             <div>
               <span class="section-kicker">Recorded walkthrough</span>
@@ -629,7 +726,7 @@
           <div>
             <div class="section-index">03 / AGENT IDENTITY</div>
             <p class="section-kicker">Separation of duties by design</p>
-            <h2 id="team-title">五个 Agent，不是五份相似提示词</h2>
+            <h2 id="team-title">六个 Agent，两条职责隔离的执行链</h2>
           </div>
           <p>
             每个角色都有清晰的输入、输出、依赖、决策边界与 Trace。角色分离直接写入 AgentTeams Worker
@@ -715,6 +812,22 @@
               <div>
                 <dt>CANNOT</dt>
                 <dd>把猜测写成事实</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="agent-card agent-card-reviewer reveal" data-delay="300">
+            <div class="agent-monogram">R</div>
+            <div class="agent-order">06</div>
+            <h3>Reviewer</h3>
+            <p>固定 PR head SHA，读取 Diff 与 Checks，发布结构化审查评论。</p>
+            <dl>
+              <div>
+                <dt>CAN</dt>
+                <dd>创建或更新托管评论</dd>
+              </div>
+              <div>
+                <dt>CANNOT</dt>
+                <dd>Approve / 改代码 / Merge</dd>
               </div>
             </dl>
           </article>
@@ -865,11 +978,11 @@
                 <strong>低风险自动执行</strong>
               </header>
               <ul>
-                <li>读取 Issue / Workflow Run</li>
+                <li>读取 Issue / PR / Workflow Run</li>
                 <li>创建非保护分支与提交</li>
                 <li>推送最小补丁</li>
                 <li>创建 Pull Request</li>
-                <li>读取 Checks 并写入 Evidence</li>
+                <li>读取 Checks 并更新托管 Review Comment</li>
               </ul>
             </article>
 
@@ -1076,7 +1189,7 @@
             >
               <span>01</span>
               <strong>Agent Spec</strong>
-              <small>5 Workers · 1 Team</small>
+              <small>6 Workers · 1 Team</small>
             </a>
             <a
               href="https://github.com/wellkilo/RepoPilot/tree/main/skills"
@@ -1085,7 +1198,7 @@
             >
               <span>02</span>
               <strong>Skills</strong>
-              <small>5 versioned contracts</small>
+              <small>6 versioned contracts</small>
             </a>
             <a
               href="https://github.com/wellkilo/RepoPilot/blob/main/API.md"

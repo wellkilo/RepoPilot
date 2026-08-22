@@ -10,7 +10,8 @@
   <p><strong>面向开源与企业研发团队的可审计仓库自治维护 AgentTeam</strong></p>
   <p>
     将 GitHub Issue 与失败 CI 安全推进到携带可验证执行证明的 Pull Request，
-    并完整保留 Agent、Skill、工具、审批、回滚点与经验证据。
+    也能在 Pull Request 更新时自动完成只读审查并维护一条结构化评论；
+    全程保留 Agent、Skill、工具、审批、回滚点与经验证据。
   </p>
   <br />
 </div>
@@ -19,7 +20,7 @@
   <img
     src="docs/assets/brand/readme-hero.svg"
     width="100%"
-    alt="RepoPilot 从 Issue 到 Verified PR，不跳过任何证据"
+    alt="RepoPilot 双闭环：从 Issue 到 Verified PR，从 Pull Request 到 Review Comment"
   />
 </a>
 
@@ -45,6 +46,7 @@
   <p>
     <a href="https://wellkilo.github.io/RepoPilot/">项目网站</a> ·
     <a href="https://wellkilo.github.io/RepoPilot/#demo">在线 Demo</a> ·
+    <a href="https://wellkilo.github.io/RepoPilot/?demoMode=review#demo">PR 自动评论演示</a> ·
     <a href="#使用过程演示">流程演示</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="docs/architecture.md">架构</a> ·
@@ -70,6 +72,38 @@
 > `pull_request_only`：Agent 可以创建分支、提交和 Pull Request，但不能自动合并、
 > 删除分支、修改权限或密钥。
 
+## 两条自动化闭环
+
+<table>
+  <thead>
+    <tr>
+      <th width="18%">入口</th>
+      <th width="36%">自动执行</th>
+      <th width="28%">交付物</th>
+      <th width="18%">安全停止点</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Issue / Failed CI</strong></td>
+      <td>分诊 → 根因定位 → 最小补丁 → 独立验证</td>
+      <td>带 Proof Bundle 的 Pull Request</td>
+      <td>停在开放 PR</td>
+    </tr>
+    <tr>
+      <td><strong>Pull Request</strong></td>
+      <td>固定 head SHA → 分页读取 Diff / Checks → Reviewer 审查</td>
+      <td>创建或更新一条托管 Review Comment</td>
+      <td>只评论，不批准、不改代码</td>
+    </tr>
+  </tbody>
+</table>
+
+PR 审查链路监听 `opened`、`reopened`、`synchronize` 与
+`ready_for_review`。每次发布前都会重新核对当前 head SHA；如果审查期间出现新提交，
+旧 Run 会被拒绝发布。评论带固定的 `<!-- repopilot-review -->` 标记，因此同一 PR
+只维护一条 RepoPilot 评论，不会重复刷屏。
+
 ## 使用过程演示
 
 <div align="center">
@@ -88,6 +122,8 @@
   <p>
     <a href="https://wellkilo.github.io/RepoPilot/#demo"><strong>打开 Issue → PR 交互 Demo ↗</strong></a>
     ·
+    <a href="https://wellkilo.github.io/RepoPilot/?demoMode=review#demo"><strong>打开 PR → Comment 交互 Demo ↗</strong></a>
+    ·
     <a href="docs/assets/demo/repopilot-agentteam-demo.mp4">观看高清 MP4</a>
     ·
     <a href="https://github.com/wellkilo/repopilot-testbed/pull/4">核验公开 PR #4</a>
@@ -100,6 +136,36 @@
 > `Types + Store + Processor + Tests + Docs` 五文件补丁修复，GitHub Actions
 > 通过后创建 [`PR #4`](https://github.com/wellkilo/repopilot-testbed/pull/4)。
 > PR 保持开放，合并权仍由人类持有。
+
+<details open>
+  <summary><strong>PR 自动评论会发布什么？</strong></summary>
+  <br />
+
+```md
+<!-- repopilot-review -->
+
+## RepoPilot PR Review
+
+**Verdict:** PASS
+**Revision:** `a215065`
+**Checks:** 7 / 7 passed
+
+### Findings
+
+- No blocking findings.
+
+### Safety boundary
+
+Read-only review. No approval, code change, merge, branch deletion,
+permission change, or secret change was performed.
+```
+
+这条评论由 <code>repopilot-reviewer</code> 使用
+<code>pull-request-review</code> Skill 生成，并通过
+<code>repopilot_publish_review_comment</code> 发布。工具会校验 Run、仓库、
+PR 编号、运行中的 Reviewer Step 和不可变 head SHA，成功后追加
+<code>review_publication</code> Evidence。
+</details>
 
 ## 维护闭环
 
