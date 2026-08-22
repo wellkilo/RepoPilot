@@ -47,6 +47,7 @@
     <a href="https://wellkilo.github.io/RepoPilot/">项目网站</a> ·
     <a href="https://wellkilo.github.io/RepoPilot/#demo">在线 Demo</a> ·
     <a href="https://wellkilo.github.io/RepoPilot/?demoMode=review#demo">PR 自动评论演示</a> ·
+    <a href="https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979">真实 Review Comment</a> ·
     <a href="#使用过程演示">流程演示</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="docs/architecture.md">架构</a> ·
@@ -124,6 +125,8 @@ PR 审查链路监听 `opened`、`reopened`、`synchronize` 与
     ·
     <a href="https://wellkilo.github.io/RepoPilot/?demoMode=review#demo"><strong>打开 PR → Comment 交互 Demo ↗</strong></a>
     ·
+    <a href="https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979"><strong>核验真实 Review Comment ↗</strong></a>
+    ·
     <a href="docs/assets/demo/repopilot-agentteam-demo.mp4">观看高清 MP4</a>
     ·
     <a href="https://github.com/wellkilo/repopilot-testbed/pull/4">核验公开 PR #4</a>
@@ -146,25 +149,31 @@ PR 审查链路监听 `opened`、`reopened`、`synchronize` 与
 
 ## RepoPilot PR Review
 
-**Verdict:** PASS
-**Revision:** `a215065`
-**Checks:** 7 / 7 passed
+**Verdict:** NEEDS ATTENTION
+**Reviewed revision:** `b504cec7c05cd2f3b84ee9c6ad7a3d3db6eead5c`
 
 ### Findings
 
-- No blocking findings.
-
-### Safety boundary
-
-Read-only review. No approval, code change, merge, branch deletion,
-permission change, or secret change was performed.
+| Severity | Finding                                | Location                          |
+| -------- | -------------------------------------- | --------------------------------- |
+| HIGH     | 发布前没有重新校验当前 head SHA        | `src/reviews/publisher.ts:19`     |
+| MEDIUM   | 固定只扫描前 100 条评论                | `src/reviews/github-client.ts:43` |
+| HIGH     | GitHub 写入失败仍记录“已发布” Evidence | `src/reviews/publisher.ts:31`     |
 ```
 
-这条评论由 <code>repopilot-reviewer</code> 使用
+这不是示例文案。公开的
+<a href="https://github.com/wellkilo/repopilot-testbed/pull/5">PR #5</a>
+包含 5 个文件、373 行新增，GitHub Actions
+<a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32557838055">CI 已通过</a>；
+RepoPilot 仍从真实 Diff 中发现 2 条 HIGH 与 1 条 MEDIUM 语义问题，并发布了
+<a href="https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979">公开 Review Comment</a>。
+评论由 <code>repopilot-reviewer</code> 使用
 <code>pull-request-review</code> Skill 生成，并通过
 <code>repopilot_publish_review_comment</code> 发布。工具会校验 Run、仓库、
 PR 编号、运行中的 Reviewer Step 和不可变 head SHA，成功后追加
-<code>review_publication</code> Evidence。
+<code>review_publication</code> Evidence。可下载
+<a href="docs/assets/demo/pr-review-run.json">脱敏 Run Proof JSON</a>
+核验 Run ID、Step、8 条 Evidence 与链头哈希。
 </details>
 
 ## 维护闭环
@@ -483,6 +492,18 @@ Checks，并幂等创建或更新一条 `RepoPilot PR Review` 评论；若 PR �
     <td>绿色 CI</td>
     <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32444690068">GitHub Actions Run 32444690068 · 7/7 tests</a></td>
   </tr>
+  <tr>
+    <td><strong>Review PR</strong></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/pull/5">Pull Request #5 · 5 files · +373 / -0</a></td>
+  </tr>
+  <tr>
+    <td><strong>Review Comment</strong></td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979">2 HIGH + 1 MEDIUM · revision b504cec</a></td>
+  </tr>
+  <tr>
+    <td>Review CI / Proof</td>
+    <td><a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32557838055">GitHub Actions Run 32557838055</a> · <a href="docs/assets/demo/pr-review-run.json">8-entry evidence chain</a></td>
+  </tr>
 </table>
 
 测试床包含一个确定性并发缺陷：相同 GitHub delivery 的两个请求可同时穿透
@@ -490,6 +511,14 @@ Checks，并幂等创建或更新一条 `RepoPilot PR Review` 评论；若 PR �
 create-or-reuse 收口到 `DeliveryTaskStore.getOrCreate`，使相同 delivery
 共享一个 in-flight Promise，并补充顺序重试和不同 delivery 的负对照。
 PR 保持开放，便于审查且未触发自动合并。
+
+PR Review Demo 使用独立的公开
+[`PR #5`](https://github.com/wellkilo/repopilot-testbed/pull/5)：代码可编译、5 项测试与
+GitHub Actions 均通过，但 Reviewer 没有把绿色 CI 等同于代码正确。它逐页读取 5 个变更文件，
+在固定 revision `b504cec` 上识别 stale SHA、评论分页和失败 Evidence 三个语义缺陷，
+并通过真实 GitHub REST 发布同一条托管评论。该 Run 的 `review_publication` 记录与 8 条
+哈希链 Evidence 已脱敏导出到
+[`docs/assets/demo/pr-review-run.json`](docs/assets/demo/pr-review-run.json)。
 
 ## 验证
 

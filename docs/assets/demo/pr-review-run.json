@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-22T06:51:16.205Z",
+  "publicDemo": true,
+  "run": {
+    "id": "39fc2bf0-9845-485a-95c4-fb003ea3b8e3",
+    "status": "succeeded",
+    "traceId": "f93021d8c0060bbed7999a0d597fbde9",
+    "source": {
+      "type": "github_pull_request",
+      "repository": "wellkilo/repopilot-testbed",
+      "pullNumber": 5,
+      "headSha": "b504cec7c05cd2f3b84ee9c6ad7a3d3db6eead5c"
+    },
+    "executionPolicy": "pull_request_only",
+    "step": {
+      "id": "3f7d9168-463c-41ad-999d-5148b7d00aaf",
+      "agentName": "repopilot-reviewer",
+      "skillName": "pull-request-review",
+      "status": "succeeded",
+      "summary": "Reviewed all 5 changed files at b504cec, confirmed CI success, published three evidence-backed findings, and performed no repository mutation beyond the managed advisory comment.",
+      "startedAt": "2026-08-22T06:50:47.233Z",
+      "endedAt": "2026-08-22T06:51:16.172Z"
+    }
+  },
+  "review": {
+    "verdict": "needs_attention",
+    "findings": [
+      {
+        "severity": "high",
+        "title": "The expected head SHA is never revalidated before publication",
+        "path": "src/reviews/publisher.ts",
+        "line": 19
+      },
+      {
+        "severity": "medium",
+        "title": "Marker lookup only scans the first 100 comments",
+        "path": "src/reviews/github-client.ts",
+        "line": 43
+      },
+      {
+        "severity": "high",
+        "title": "Failed GitHub writes are recorded as successful publication",
+        "path": "src/reviews/publisher.ts",
+        "line": 31
+      }
+    ],
+    "publication": {
+      "operation": "publish_review_comment",
+      "action": "created",
+      "commentId": 5378707979,
+      "commentUrl": "https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979",
+      "findingCount": 3
+    }
+  },
+  "integrity": {
+    "evidenceCount": 8,
+    "evidenceChainValid": true,
+    "chainHead": "ea3171f05b5e7bdd1afdb256932e4d616123d287c5619a8d4b939889546eb1b6",
+    "evidence": [
+      {
+        "id": "491",
+        "type": "input",
+        "chainHash": "4ca50c8e28fbbe70cabc6d0576383158bb9e86a66b02b361f49d65977dc50c47"
+      },
+      {
+        "id": "492",
+        "type": "tool_result",
+        "chainHash": "44fab6dd112e98e3fdeffdd3eb38194f489969c8b9dfa6ff4a6bde4e2061f3fc"
+      },
+      {
+        "id": "493",
+        "type": "agent_message",
+        "chainHash": "d6d9cc3607e406903671a8aed1135220aa0602a01bcd85d245942ddb8328839f"
+      },
+      {
+        "id": "494",
+        "type": "agent_message",
+        "chainHash": "a7b0fa34cf9c70460e0889de6aebba2df54bf6cf578a7db727790b2611675aca"
+      },
+      {
+        "id": "495",
+        "type": "ci_result",
+        "chainHash": "6a53aaa028a45a122a1f2b76ef4e46f67999ff8b162a7be3a11452d1dcd29ddb"
+      },
+      {
+        "id": "496",
+        "type": "decision",
+        "chainHash": "e68fe16bf927a212ea7f34d59e35b45a1926e77b859fb9f8742337ee288cb40b"
+      },
+      {
+        "id": "497",
+        "type": "review_publication",
+        "chainHash": "53adb8398d48797956e87304f0c9ebf4855921230b0690874ff354ccfb046b25"
+      },
+      {
+        "id": "498",
+        "type": "agent_message",
+        "chainHash": "ea3171f05b5e7bdd1afdb256932e4d616123d287c5619a8d4b939889546eb1b6"
+      }
+    ]
+  }
+}

@@ -628,54 +628,56 @@ Evidence: 16 · VALID`
     ]
   },
   review: {
-    runKind: "PULL REQUEST → MANAGED COMMENT · CAPABILITY WALKTHROUGH",
-    repository: "wellkilo/repopilot-testbed · Pull Request #4",
+    runKind: "PUBLIC PR → MANAGED COMMENT · EXTERNALLY VERIFIABLE",
+    repository: "wellkilo/repopilot-testbed · Pull Request #5",
     fileSummary: "5 CHANGED FILES",
-    runStatus: "REVIEW COMMENT READY",
+    runStatus: "3 FINDINGS · COMMENT LIVE",
     agentOrder: ["reviewer"],
     disclosure:
-      "该模式按已实现的真实 GitHub REST、MCP、数据库与安全契约回放 PR 自动审查能力；不会声称已执行未发生的 approve、改代码或 merge。",
-    chain: "6 REVIEW STEPS · IMMUTABLE HEAD",
+      "PR #5、提交 b504cec、CI Run 32557838055 与评论 #5378707979 均可在 GitHub 核验；回放数据来自 Run 39fc2bf0 的 8 条有效 Evidence。",
+    chain: "8 EVIDENCE RECORDS · CHAIN VALID",
     playLabel: "播放 PR → Comment",
     outcomes: [
-      ["4 events", "自动触发", "opened · reopened · synchronize · ready_for_review"],
-      ["HEAD SHA", "版本固定", "stale review is rejected before publication"],
-      ["1 comment", "幂等更新", "<!-- repopilot-review -->"],
+      ["5 files", "完整 Diff", "373 additions · page complete"],
+      ["3 findings", "针对本次 PR", "2 HIGH · 1 MEDIUM · path + line"],
+      ["1 comment", "公开可核验", "Comment #5378707979"],
       ["READ ONLY", "Reviewer 边界", "No approve · no patch · no merge"]
     ],
     steps: [
       {
         label: "PR Event",
-        caption: "接收事件",
+        caption: "创建 Run",
         owner: "CONTROL PLANE",
         agent: "reviewer",
-        status: "WEBHOOK VERIFIED",
-        title: "Pull Request 更新触发独立审查 Run",
-        copy: "Control Plane 验证 X-Hub-Signature-256、仓库 allowlist、动作类型和 Draft 状态，只为可执行的 PR 事件创建 github_pull_request Run。",
-        evidence: "01 · task_input",
-        artifact: "pull_request.synchronize",
-        boundary: "Draft ignored",
-        changeSummary: "signed event · allowlisted repo",
-        terminalLabel: "event://github/pull_request.synchronize",
-        log: "signature valid · draft false · action synchronize · accepted",
-        proofCount: "01 / 06",
+        status: "RUN DISPATCHED",
+        title: "公开 PR #5 进入独立只读审查 Run",
+        copy: "Control Plane 从 GitHub 读取 PR 元数据和 5 个变更文件，将 repository、pull number 与 head SHA 固化为 Run 输入，并通过 Matrix 向 AgentTeams 派发。",
+        evidence: "01–03 · input / source / dispatch",
+        artifact: "Run 39fc2bf0",
+        boundary: "pull_request_only",
+        changeSummary: "PR #5 · 5 files · +373",
+        terminalLabel: "control-plane://runs/39fc2bf0",
+        log: "status dispatched · Matrix event recorded · evidence chain started",
+        proofCount: "03 / 08",
         proof: [
-          ["done", "Webhook HMAC 已验证"],
+          ["done", "PR #5 来源已固化"],
+          ["done", "5 个文件摘要已读取"],
+          ["done", "Matrix 派发事件已记录"],
           ["next", "等待固定 head SHA"],
-          ["next", "等待 Diff / Checks"],
-          ["next", "等待托管评论"]
+          ["next", "等待 Reviewer"]
         ],
         gateTitle: "READ-ONLY REVIEW",
         gateCopy: "该 Run 不能执行维护 Skill 或申请高风险审批。",
         files: [
           {
-            label: "webhook.json",
+            label: "run-source.json",
             code: `{
-  "action": "synchronize",
+  "runId": "39fc2bf0-9845-485a-95c4-fb003ea3b8e3",
+  "type": "github_pull_request",
   "repository": "wellkilo/repopilot-testbed",
-  "pullNumber": 4,
-  "draft": false,
-  "headSha": "a215065..."
+  "pullNumber": 5,
+  "headSha": "b504cec7c05cd2f3b84ee9c6ad7a3d3db6eead5c",
+  "policy": "pull_request_only"
 }`
           }
         ]
@@ -687,14 +689,14 @@ Evidence: 16 · VALID`
         agent: "reviewer",
         status: "HEAD SHA LOCKED",
         title: "审查上下文绑定不可变 head SHA",
-        copy: "Reviewer 读取 PR 元数据并把 Run、仓库、PR 编号与 head SHA 绑定。发布前会再次读取 GitHub 当前 revision；新提交会让旧审查失效。",
-        evidence: "02 · review_context",
-        artifact: "head a215065",
+        copy: "Reviewer Step 只允许执行 pull-request-review。读取 PR 时，Run、仓库、PR 编号和 GitHub 当前 revision 必须一致；发布前还会再次核验。",
+        evidence: "04 · reviewer step",
+        artifact: "head b504cec",
         boundary: "Stale publish denied",
         changeSummary: "run + pull + revision",
         terminalLabel: "mcp://github_get_pull_request",
-        log: "run head == input head == GitHub head · revision locked",
-        proofCount: "02 / 06",
+        log: "Run head == input head == GitHub head · b504cec locked",
+        proofCount: "04 / 08",
         proof: [
           ["done", "Run 来源已匹配"],
           ["done", "PR 编号已匹配"],
@@ -709,8 +711,8 @@ Evidence: 16 · VALID`
             code: `{
   "type": "github_pull_request",
   "repository": "wellkilo/repopilot-testbed",
-  "pullNumber": 4,
-  "headSha": "a215065..."
+  "pullNumber": 5,
+  "headSha": "b504cec7c05cd2f3b84ee9c6ad7a3d3db6eead5c"
 }`
           }
         ]
@@ -723,13 +725,13 @@ Evidence: 16 · VALID`
         status: "CHANGES LOADED",
         title: "分页读取所有 changed files，而不是只看首页",
         copy: "Reviewer 通过 GitHub REST 拉取 PR 文件列表和补丁摘要，直到确认分页完整；文件过多、补丁截断或响应异常都会作为审查限制写入结论。",
-        evidence: "03 · tool_result",
+        evidence: "tool · complete diff page",
         artifact: "5 changed files",
         boundary: "Read GitHub only",
-        changeSummary: "5 files · +75 / -22",
+        changeSummary: "5 files · +373 / -0",
         terminalLabel: "mcp://github_list_pull_request_files",
-        log: "page 1 complete · 5 files · additions 75 · deletions 22",
-        proofCount: "03 / 06",
+        log: "page 1 complete · 5 files · additions 373 · deletions 0",
+        proofCount: "04 / 08",
         proof: [
           ["done", "PR 元数据已读取"],
           ["done", "Changed files 已完整分页"],
@@ -742,22 +744,25 @@ Evidence: 16 · VALID`
           {
             label: "changed-files.json",
             code: `[
-  "src/webhooks/types.ts",
-  "src/webhooks/store.ts",
-  "src/webhooks/processor.ts",
-  "src/webhooks/processor.test.ts",
-  "README.md"
+  "src/reviews/github-client.ts",
+  "src/reviews/markdown.ts",
+  "src/reviews/publisher.ts",
+  "src/reviews/publisher.test.ts",
+  "src/reviews/types.ts"
 ]
 
-Diff: +75 / -22`
+Diff: +373 / -0`
           },
           {
-            label: "store.patch",
-            code: `+ const pending = inFlight.get(deliveryId);
-+ if (pending) return reuse(pending);
-+
-+ const creation = createTask()
-+   .finally(() => inFlight.delete(deliveryId));`
+            label: "publisher.patch",
+            code: `const comments = await github.listIssueComments(...);
+const existing = comments.find(hasMarker);
+
+try {
+  publication = await publishComment(...);
+} finally {
+  await ledger.append({ status: "published" });
+}`
           }
         ]
       },
@@ -767,15 +772,15 @@ Diff: +75 / -22`
         owner: "REVIEWER",
         agent: "reviewer",
         status: "CHECKS COLLECTED",
-        title: "审查结论同时引用 GitHub Checks",
-        copy: "Reviewer 不把语言模型判断冒充测试结果。Check Runs 被作为独立事实读取，成功、失败、进行中或缺失都会原样进入结构化 Review。",
-        evidence: "04 · verification",
-        artifact: "7 / 7 passed",
+        title: "绿色 CI 是事实，但不是代码正确性的替代品",
+        copy: "GitHub Actions 的 typecheck 与 5 项测试全部通过，Reviewer 将它作为独立 ci_result Evidence；随后仍继续检查并发、分页和失败语义。",
+        evidence: "05 · ci_result",
+        artifact: "Run 32557838055",
         boundary: "No fabricated result",
         changeSummary: "CI conclusion SUCCESS",
-        terminalLabel: "github://checks/a215065",
-        log: "typecheck success · test success · 7 / 7 passed",
-        proofCount: "04 / 06",
+        terminalLabel: "github-actions://32557838055",
+        log: "typecheck success · 5 tests passed · workflow success",
+        proofCount: "05 / 08",
         proof: [
           ["done", "Diff 已完整读取"],
           ["done", "Check Runs 已读取"],
@@ -788,10 +793,11 @@ Diff: +75 / -22`
           {
             label: "checks.json",
             code: `{
-  "headSha": "a215065...",
-  "status": "completed",
+  "headSha": "b504cec7c05cd2f3b84ee9c6ad7a3d3db6eead5c",
+  "workflowRun": 32557838055,
   "conclusion": "success",
-  "tests": "7 / 7 passed"
+  "typecheck": "passed",
+  "tests": "5 / 5 passed"
 }`
           }
         ]
@@ -801,16 +807,16 @@ Diff: +75 / -22`
         caption: "结构化结论",
         owner: "REVIEWER",
         agent: "reviewer",
-        status: "VERDICT READY",
-        title: "Reviewer 产出有上限、有严重度的 Findings",
-        copy: "pull-request-review Skill 输出 verdict、summary、checks、limitations 与最多 20 条 findings。每条发现包含 severity、文件、行号、证据和可执行建议。",
-        evidence: "05 · decision",
-        artifact: "verdict pass",
+        status: "NEEDS ATTENTION",
+        title: "三个 Finding 直接对应本次 PR 的代码位置",
+        copy: "Reviewer 没有泛化总结：它指出 publisher 没有复核 head SHA、GitHub Client 只扫描第一页评论，以及 finally 会把失败写入记录成发布成功。",
+        evidence: "06 · decision",
+        artifact: "2 HIGH · 1 MEDIUM",
         boundary: "Max 20 findings",
-        changeSummary: "0 blocking findings",
+        changeSummary: "3 findings · path + line",
         terminalLabel: "skill://pull-request-review",
-        log: "verdict pass · critical 0 · high 0 · limitations 0",
-        proofCount: "05 / 06",
+        log: "verdict needs_attention · high 2 · medium 1",
+        proofCount: "06 / 08",
         proof: [
           ["done", "当前 revision 已确认"],
           ["done", "Diff 与 Checks 已关联"],
@@ -823,11 +829,38 @@ Diff: +75 / -22`
           {
             label: "review-result.json",
             code: `{
-  "verdict": "pass",
-  "summary": "Concurrency fix is scoped and verified.",
-  "checks": ["7 / 7 passed"],
-  "findings": [],
-  "limitations": []
+  "verdict": "needs_attention",
+  "findings": [
+    "HIGH publisher.ts:19 · stale SHA",
+    "MEDIUM github-client.ts:43 · first page only",
+    "HIGH publisher.ts:31 · false success evidence"
+  ]
+}`
+          },
+          {
+            label: "finding-1.patch",
+            code: `// publisher.ts:17–30
+async publish(input) {
+  const comments = await listIssueComments(...);
+  // getPullRequest() is never called here
+  return createOrUpdateComment(...);
+}`
+          },
+          {
+            label: "finding-2.patch",
+            code: `// github-client.ts:43
+/comments?per_page=100&page=1
+
+// No next-page traversal before deciding
+// that the marker does not exist.`
+          },
+          {
+            label: "finding-3.patch",
+            code: `// publisher.ts:31
+} finally {
+  await ledger.append({
+    status: "published"
+  });
 }`
           }
         ]
@@ -838,15 +871,15 @@ Diff: +75 / -22`
         owner: "REVIEWER",
         agent: "reviewer",
         status: "MANAGED COMMENT",
-        title: "创建或更新同一条 RepoPilot Review Comment",
-        copy: "发布工具跨页查找固定 marker，存在时更新原评论，不存在且已完整扫描时才创建。成功后追加 review_publication Evidence 并结束 Run。",
-        evidence: "06 · review_publication",
-        artifact: "managed issue comment",
+        title: "三条结论已发布到公开 PR #5",
+        copy: "生产发布器先再次核对 GitHub 当前 head SHA，再跨页查找固定 marker。评论创建成功后追加 review_publication Evidence；Reviewer Step 与 Run 随后结束。",
+        evidence: "07–08 · publication / finish",
+        artifact: "comment #5378707979",
         boundary: "No approve · no merge",
-        changeSummary: "1 marker · 1 comment",
+        changeSummary: "1 marker · 3 findings",
         terminalLabel: "mcp://repopilot_publish_review_comment",
-        log: "marker found or created · publication recorded · run succeeded",
-        proofCount: "06 / 06",
+        log: "comment created · Evidence #497 · chain valid · run succeeded",
+        proofCount: "08 / 08",
         proof: [
           ["done", "当前 head SHA 再次核验"],
           ["done", "Reviewer Step 状态已核验"],
@@ -861,12 +894,13 @@ Diff: +75 / -22`
             code: `<!-- repopilot-review -->
 ## RepoPilot PR Review
 
-**Verdict:** PASS
-**Revision:** \`a215065\`
-**Checks:** 7 / 7 passed
+**Verdict:** NEEDS ATTENTION
+**Reviewed revision:** \`b504cec\`
 
 ### Findings
-- No blocking findings.
+- HIGH · publisher.ts:19 · stale SHA
+- MEDIUM · github-client.ts:43 · pagination
+- HIGH · publisher.ts:31 · false evidence
 
 ### Safety boundary
 Read-only review. No approval, code change,
@@ -877,10 +911,11 @@ or secret change was performed.`
             label: "publication.json",
             code: `{
   "type": "review_publication",
-  "pullNumber": 4,
-  "headSha": "a215065...",
-  "mode": "create-or-update",
-  "marker": "<!-- repopilot-review -->"
+  "pullNumber": 5,
+  "headSha": "b504cec...",
+  "commentId": 5378707979,
+  "findingCount": 3,
+  "chainValid": true
 }`
           }
         ]

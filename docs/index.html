@@ -405,9 +405,9 @@
               <small>Issue #1 → 一行补丁 → PR #2</small>
             </button>
             <button type="button" role="tab" aria-selected="false" data-demo-mode="review">
-              <span>PR REVIEW</span>
-              <strong>Pull Request → Comment</strong>
-              <small>固定 SHA → Diff / Checks → 托管评论</small>
+              <span>PUBLIC PR REVIEW</span>
+              <strong>PR #5 → 3 Findings</strong>
+              <small>绿色 CI → 语义审查 → 公开评论</small>
             </button>
             <p data-demo-disclosure>
               主模式中的 Issue、失败基线、提交、CI 和 PR 均来自公开的
@@ -581,46 +581,61 @@
 
           <div class="review-showcase reveal" id="pr-review" data-delay="180">
             <div class="review-route">
-              <span class="section-kicker">Pull Request automation</span>
-              <h3>PR 一有新提交，Reviewer 就重新检查当前 revision</h3>
+              <span class="section-kicker">Public review evidence</span>
+              <h3>CI 已通过，Reviewer 仍从真实 Diff 找出三个问题</h3>
               <p>
-                这不是第二条修复链。Reviewer 只读取 PR、Changed Files 与 Checks，
-                生成结构化结论，并创建或更新同一条评论。
+                公开 PR #5 新增 5 个文件、373 行代码。RepoPilot 将审查绑定到
+                <code>b504cec</code>，读取完整 Diff 与 Checks 后，发布 2 条 HIGH 和 1 条 MEDIUM
+                finding，而不是输出泛化的 PASS。
               </p>
               <ol>
                 <li>
                   <span>01</span>
                   <div>
-                    <strong>触发</strong>
-                    <small>opened · reopened · synchronize · ready_for_review</small>
+                    <strong>发布前未复核 head SHA</strong>
+                    <small>src/reviews/publisher.ts:19 · HIGH</small>
                   </div>
                 </li>
                 <li>
                   <span>02</span>
                   <div>
-                    <strong>固定版本</strong>
-                    <small>Run、PR 与 GitHub 当前 head SHA 必须一致</small>
+                    <strong>Marker 只扫描前 100 条评论</strong>
+                    <small>src/reviews/github-client.ts:43 · MEDIUM</small>
                   </div>
                 </li>
                 <li>
                   <span>03</span>
                   <div>
-                    <strong>只读审查</strong>
-                    <small>分页读取 Diff / Checks，最多输出 20 条 Findings</small>
+                    <strong>失败写入仍记录发布成功</strong>
+                    <small>src/reviews/publisher.ts:31 · HIGH</small>
                   </div>
                 </li>
                 <li>
                   <span>04</span>
                   <div>
-                    <strong>幂等发布</strong>
-                    <small>固定 marker 命中原评论；旧 revision 禁止覆盖</small>
+                    <strong>证据链完整</strong>
+                    <small>8 Evidence · Run succeeded · chain valid</small>
                   </div>
                 </li>
               </ol>
-              <a href="?demoMode=review#demo">
-                回放 PR → Comment 完整流程
-                <span aria-hidden="true">↑</span>
-              </a>
+              <div class="review-actions">
+                <a href="?demoMode=review#demo">回放完整流程 <span aria-hidden="true">↑</span></a>
+                <a
+                  href="https://github.com/wellkilo/repopilot-testbed/pull/5"
+                  target="_blank"
+                  rel="noreferrer"
+                  >打开 PR #5 <span aria-hidden="true">↗</span></a
+                >
+                <a
+                  href="https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979"
+                  target="_blank"
+                  rel="noreferrer"
+                  >核验评论 <span aria-hidden="true">↗</span></a
+                >
+                <a href="./assets/demo/pr-review-run.json" target="_blank" rel="noreferrer"
+                  >Run Proof <span aria-hidden="true">↗</span></a
+                >
+              </div>
             </div>
 
             <article class="managed-comment" aria-label="RepoPilot PR 审查评论预览">
@@ -628,9 +643,9 @@
                 <div class="review-avatar">R</div>
                 <div>
                   <strong>repopilot-reviewer</strong>
-                  <small>commented on revision a215065</small>
+                  <small>commented on revision b504cec</small>
                 </div>
-                <span>MANAGED</span>
+                <span>PUBLIC · MANAGED</span>
               </header>
               <div class="managed-comment-body">
                 <code>&lt;!-- repopilot-review --&gt;</code>
@@ -638,19 +653,41 @@
                 <dl>
                   <div>
                     <dt>VERDICT</dt>
-                    <dd class="review-pass">PASS</dd>
+                    <dd class="review-attention">NEEDS ATTENTION</dd>
                   </div>
                   <div>
                     <dt>REVISION</dt>
-                    <dd>a215065</dd>
+                    <dd>b504cec</dd>
                   </div>
                   <div>
                     <dt>CHECKS</dt>
-                    <dd>7 / 7 passed</dd>
+                    <dd>CI PASSED</dd>
                   </div>
                 </dl>
                 <h5>Findings</h5>
-                <p>No blocking findings.</p>
+                <ol class="review-findings">
+                  <li>
+                    <span>HIGH</span>
+                    <div>
+                      <strong>发布前没有重新校验 head SHA</strong>
+                      <code>src/reviews/publisher.ts:19</code>
+                    </div>
+                  </li>
+                  <li>
+                    <span>MEDIUM</span>
+                    <div>
+                      <strong>Marker 查找固定在第一页</strong>
+                      <code>src/reviews/github-client.ts:43</code>
+                    </div>
+                  </li>
+                  <li>
+                    <span>HIGH</span>
+                    <div>
+                      <strong>失败路径仍写入 published Evidence</strong>
+                      <code>src/reviews/publisher.ts:31</code>
+                    </div>
+                  </li>
+                </ol>
                 <h5>Safety boundary</h5>
                 <p>
                   Read-only review. No approval, code change, merge, branch deletion, permission
@@ -658,9 +695,9 @@
                 </p>
               </div>
               <footer>
-                <span>1 MARKER</span>
-                <span>CREATE OR UPDATE</span>
-                <span>STALE SHA BLOCKED</span>
+                <span>3 FINDINGS</span>
+                <span>COMMENT #5378707979</span>
+                <span>CHAIN VALID</span>
               </footer>
             </article>
           </div>
@@ -716,6 +753,20 @@
               rel="noreferrer"
             >
               Passing CI ↗
+            </a>
+            <a
+              href="https://github.com/wellkilo/repopilot-testbed/pull/5"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Review PR #5 ↗
+            </a>
+            <a
+              href="https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Review Comment ↗
             </a>
           </div>
         </div>

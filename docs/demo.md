@@ -21,15 +21,21 @@ Open:
 https://wellkilo.github.io/RepoPilot/#demo
 ```
 
-The public demo has two explicitly separated modes:
+The public demo has three explicitly separated modes:
 
 - **Public Issue → PR** is the default path. It replays the externally
   verifiable Issue #3 delivery from failing baseline to five-file patch,
   passing CI, and open PR #4.
 - **Historical minimal case** preserves the earlier Issue #1 / PR #2
   one-line repair for comparison, but it is not the primary demo.
+- **Public PR → Review Comment** replays the completed review Run for
+  [`PR #5`](https://github.com/wellkilo/repopilot-testbed/pull/5). The pull
+  request has five changed files and passing CI, while RepoPilot still found
+  two HIGH and one MEDIUM semantic defect at concrete file and line locations.
+  The resulting managed comment is
+  [publicly verifiable](https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979).
 
-Neither mode requires a model API key, GitHub credential, or AgentTeams
+No demo mode requires a model API key, GitHub credential, or AgentTeams
 administrator account.
 
 Recorded walkthrough:
@@ -67,6 +73,34 @@ https://wellkilo.github.io/RepoPilot/assets/demo/repopilot-agentteam-demo.mp4
    creation and downstream dispatch.
 9. If a merge is requested, Repo Lead creates a high-risk approval. The human
    may approve, but this demo deliberately leaves PR #4 open.
+
+## Public PR Review Flow
+
+- Pull Request: [`wellkilo/repopilot-testbed#5`](https://github.com/wellkilo/repopilot-testbed/pull/5)
+- Reviewed revision: `b504cec7c05cd2f3b84ee9c6ad7a3d3db6eead5c`
+- Changed files: `5`, patch size: `+373 / -0`
+- Passing CI: [`32557838055`](https://github.com/wellkilo/repopilot-testbed/actions/runs/32557838055)
+- Managed comment:
+  [`5378707979`](https://github.com/wellkilo/repopilot-testbed/pull/5#issuecomment-5378707979)
+- Review result: `NEEDS ATTENTION`, with `2 HIGH` and `1 MEDIUM` finding
+- RepoPilot Run: `39fc2bf0-9845-485a-95c4-fb003ea3b8e3`
+- Evidence: `8` hash-chained records, chain valid
+- Redacted proof:
+  [`assets/demo/pr-review-run.json`](assets/demo/pr-review-run.json)
+
+The review is tied to this pull request rather than a generic checklist:
+
+1. `src/reviews/publisher.ts:19` never re-reads the current pull request head
+   before publication, so a stale review can be published after a new commit.
+2. `src/reviews/github-client.ts:43` fixes comment lookup to page 1, so an
+   existing marker beyond the first 100 comments can be missed and duplicated.
+3. `src/reviews/publisher.ts:31` appends `status: "published"` in `finally`, so
+   a failed GitHub write can still create false success evidence.
+
+The production RepoPilot publisher does not share these intentional testbed
+defects: it revalidates the current head SHA, scans all comment pages, appends
+publication evidence only after success, and updates the marker comment
+idempotently.
 
 ## Evidence to Show
 
