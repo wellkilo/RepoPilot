@@ -631,8 +631,8 @@ const loopData = [
   {
     owner: "CONTROL PLANE",
     title: "任务输入",
-    copy: "接收 GitHub Issue 或失败 Workflow Run。原始请求经过 HMAC-SHA256 验签，仓库必须命中 allowlist。",
-    input: "Issue / Failed CI / Policy",
+    copy: "接收 GitHub Issue、失败 Workflow Run 或 Pull Request。原始请求经过 HMAC-SHA256 验签，仓库必须命中 allowlist。",
+    input: "Issue / Failed CI / PR / Policy",
     output: "Run ID + immutable source context",
     failure: "签名错误或仓库越界时立即拒绝"
   },

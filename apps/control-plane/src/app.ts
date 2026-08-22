@@ -46,7 +46,64 @@ const githubWorkflowWebhookSchema = z.object({
   })
 });
 
+const githubPullRequestWebhookSchema = z.object({
+  action: z.enum(["opened", "reopened", "synchronize", "ready_for_review"]),
+  repository: z.object({ full_name: z.string() }),
+  pull_request: z.object({
+    number: z.number().int().positive(),
+    draft: z.boolean(),
+    head: z.object({
+      sha: z.string().regex(/^[a-f0-9]{40}$/i)
+    })
+  })
+});
+
 const uuidParamsSchema = z.object({ id: z.string().uuid() });
+
+export function createRunInputFromGitHubWebhook(
+  event: string,
+  body: unknown
+): CreateRunInput | null {
+  if (event === "issues") {
+    const payload = githubIssueWebhookSchema.safeParse(body);
+    if (payload.success) {
+      return {
+        source: {
+          type: "github_issue",
+          repository: payload.data.repository.full_name,
+          issueNumber: payload.data.issue.number
+        },
+        executionPolicy: "pull_request_only"
+      };
+    }
+  } else if (event === "workflow_run") {
+    const payload = githubWorkflowWebhookSchema.safeParse(body);
+    if (payload.success && payload.data.workflow_run.conclusion === "failure") {
+      return {
+        source: {
+          type: "github_workflow_run",
+          repository: payload.data.repository.full_name,
+          workflowRunId: payload.data.workflow_run.id
+        },
+        executionPolicy: "pull_request_only"
+      };
+    }
+  } else if (event === "pull_request") {
+    const payload = githubPullRequestWebhookSchema.safeParse(body);
+    if (payload.success && !payload.data.pull_request.draft) {
+      return {
+        source: {
+          type: "github_pull_request",
+          repository: payload.data.repository.full_name,
+          pullNumber: payload.data.pull_request.number,
+          headSha: payload.data.pull_request.head.sha
+        },
+        executionPolicy: "pull_request_only"
+      };
+    }
+  }
+  return null;
+}
 
 export async function buildApp(dependencies: AppDependencies): Promise<FastifyInstance> {
   const { config, store, github, runService } = dependencies;
@@ -157,6 +214,17 @@ export async function buildApp(dependencies: AppDependencies): Promise<FastifyIn
                     repository: { type: "string", pattern: "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
                     workflowRunId: { type: "integer", minimum: 1 }
                   }
+                },
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["type", "repository", "pullNumber", "headSha"],
+                  properties: {
+                    type: { const: "github_pull_request" },
+                    repository: { type: "string", pattern: "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+                    pullNumber: { type: "integer", minimum: 1 },
+                    headSha: { type: "string", pattern: "^[a-fA-F0-9]{40}$" }
+                  }
                 }
               ]
             },
@@ -211,32 +279,7 @@ export async function buildApp(dependencies: AppDependencies): Promise<FastifyIn
       return reply.code(401).send({ error: "invalid_webhook_signature" });
     }
 
-    let input: CreateRunInput | null = null;
-    if (event === "issues") {
-      const payload = githubIssueWebhookSchema.safeParse(request.body);
-      if (payload.success) {
-        input = {
-          source: {
-            type: "github_issue",
-            repository: payload.data.repository.full_name,
-            issueNumber: payload.data.issue.number
-          },
-          executionPolicy: "pull_request_only"
-        };
-      }
-    } else if (event === "workflow_run") {
-      const payload = githubWorkflowWebhookSchema.safeParse(request.body);
-      if (payload.success && payload.data.workflow_run.conclusion === "failure") {
-        input = {
-          source: {
-            type: "github_workflow_run",
-            repository: payload.data.repository.full_name,
-            workflowRunId: payload.data.workflow_run.id
-          },
-          executionPolicy: "pull_request_only"
-        };
-      }
-    }
+    const input = createRunInputFromGitHubWebhook(event, request.body);
 
     if (!input) {
       return reply.code(202).send({ accepted: false, reason: "event_not_actionable" });

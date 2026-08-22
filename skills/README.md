@@ -1,12 +1,13 @@
 # RepoPilot Skills
 
-RepoPilot ships five Apache-2.0 custom Skills:
+RepoPilot ships six Apache-2.0 custom Skills:
 
 1. `repository-triage`
 2. `root-cause-localization`
 3. `safe-patch-authoring`
 4. `verification-gate`
 5. `runbook-archival`
+6. `pull-request-review`
 
 `manifest.json` 是 Skill 的统一发布契约，记录版本、类型、调用者、输入输出、调用条件、
 依赖、失败处理、权限边界和验证项。CI 会校验 Manifest、每个 `SKILL.md` 以及

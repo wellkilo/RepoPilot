@@ -14,13 +14,13 @@
 
 ## 评分差距矩阵
 
-| 评分维度                | 权重 | 当前可核验证据                                          | 已补强                                                                                                 | 仍需复赛前完成                                                      |
-| ----------------------- | ---: | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| 场景价值与可复制性      |  25% | 公开 Issue #3、失败 CI、五文件修复、PR #4、绿色 CI      | 将交付定义为 Proof-Carrying Pull Request；新增五类公开 Benchmark 规划                                  | 为至少 3 类缺陷生成真实 Issue→PR 证据并统计耗时与成功率             |
-| 多 Agent 协同与自主闭环 |  25% | 5 个 AgentTeams Worker、Matrix 事件、16 条历史 Evidence | 新增幂等 Step 生命周期、Agent/Skill 强绑定、控制台实时状态                                             | 用新版本完成一次五 Step 真实 AgentTeams Run 并发布 PR Proof Comment |
-| Skill 工程与生态复用    |  25% | 5 个 Apache-2.0 Skill、官方 AgentLoop Skill 可选接入    | 新增 `skills/manifest.json`、版本、发布兼容、权限、失败与验证契约，CI 自动校验                         | 发布带校验摘要的 Skill Release，并在第二个仓库复用至少一个 Skill    |
-| 工程验证与安全审计      |  20% | HMAC、幂等、显式状态机、一次性审批、Evidence 哈希链     | 新增 Proof Bundle、PR Proof Comment、确定性评分、Agent/Skill/MCP/Run Span 和 Metrics、27/27 可靠性报告 | 部署 OTLP 后端并保留真实 Trace/Metrics 截图或导出文件               |
-| 开放与开源贡献          |   5% | Apache-2.0、公开仓库、API/Method、部署、测试床          | 新增评测协议与可移植 Proof Schema                                                                      | 创建版本化 Release、贡献指南、复现者反馈或外部使用证据              |
+| 评分维度                | 权重 | 当前可核验证据                                          | 已补强                                                                                      | 仍需复赛前完成                                                     |
+| ----------------------- | ---: | ------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 场景价值与可复制性      |  25% | 公开 Issue #3、失败 CI、五文件修复、PR #4、绿色 CI      | 将交付定义为 Proof-Carrying Pull Request；新增五类公开 Benchmark 规划                       | 为至少 3 类缺陷生成真实 Issue→PR 证据并统计耗时与成功率            |
+| 多 Agent 协同与自主闭环 |  25% | 6 个 AgentTeams Worker、Matrix 事件、16 条历史 Evidence | 新增幂等 Step 生命周期、Agent/Skill 强绑定、控制台实时状态与只读 PR Reviewer                | 用新版本完成一次五 Step 真实维护 Run，并完成一次真实 PR Review Run |
+| Skill 工程与生态复用    |  25% | 6 个 Apache-2.0 Skill、官方 AgentLoop Skill 可选接入    | 新增 `skills/manifest.json`、版本、发布兼容、权限、失败与验证契约，CI 自动校验              | 发布带校验摘要的 Skill Release，并在第二个仓库复用至少一个 Skill   |
+| 工程验证与安全审计      |  20% | HMAC、幂等、显式状态机、一次性审批、Evidence 哈希链     | 新增 Proof Bundle、PR Proof/Review Comment、stale SHA 防护、Trace/Metrics、46/46 可靠性报告 | 部署 OTLP 后端并保留真实 Trace/Metrics 截图或导出文件              |
+| 开放与开源贡献          |   5% | Apache-2.0、公开仓库、API/Method、部署、测试床          | 新增评测协议与可移植 Proof Schema                                                           | 创建版本化 Release、贡献指南、复现者反馈或外部使用证据             |
 
 ## 差异化主张
 
@@ -45,7 +45,7 @@ Run identity
 
 ### 控制面可靠性
 
-CI 运行 `pnpm benchmark:reliability`，当前本地基线为 **27/27 tests passed**。该报告只
+CI 运行 `pnpm benchmark:reliability`，当前本地基线为 **46/46 tests passed**。该报告只
 验证确定性工程契约，包括：
 
 - Webhook HMAC 与并发幂等；
@@ -54,6 +54,7 @@ CI 运行 `pnpm benchmark:reliability`，当前本地基线为 **27/27 tests pas
 - 审批版本和一次性消费；
 - Agent Skill Step 幂等与终态；
 - Proof Bundle 评分器；
+- PR Review 事件过滤、来源绑定、评论幂等和 stale SHA 拒绝；
 - Console 标签与构建契约。
 
 ### AgentTeam 任务质量

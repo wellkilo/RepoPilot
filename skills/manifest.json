@@ -118,6 +118,29 @@
         "claims cite revisions or evidence",
         "Proof Comment publishes score and chain head without raw evidence payloads"
       ]
+    },
+    {
+      "name": "pull-request-review",
+      "version": "0.2.0",
+      "type": "review",
+      "path": "pull-request-review/SKILL.md",
+      "invokedBy": ["repopilot-reviewer"],
+      "inputs": ["runId", "repository", "pull request number", "immutable head SHA"],
+      "outputs": ["verdict", "structured findings", "managed pull request review comment"],
+      "invocationConditions": "Exactly once for each actionable pull_request event and immutable head SHA.",
+      "dependencies": [
+        "github_get_pull_request",
+        "github_list_pull_request_files",
+        "github_get_pull_request_checks",
+        "repopilot_append_evidence",
+        "repopilot_publish_review_comment"
+      ],
+      "failureHandling": "Return blocked for stale revisions or incomplete evidence and never invent file or line locations.",
+      "permissions": "Read-only analysis; may create or update only the single managed general review comment and cannot approve, modify, or merge the pull request.",
+      "verification": [
+        "review run and comment target the same repository, pull request, and head SHA",
+        "managed comment publication is recorded before the Step succeeds"
+      ]
     }
   ]
 }

@@ -33,7 +33,8 @@ export const agentNameSchema = z.enum([
   "repopilot-locator",
   "repopilot-fixer",
   "repopilot-verifier",
-  "repopilot-archivist"
+  "repopilot-archivist",
+  "repopilot-reviewer"
 ]);
 export type AgentName = z.infer<typeof agentNameSchema>;
 
@@ -42,7 +43,8 @@ export const skillNameSchema = z.enum([
   "root-cause-localization",
   "safe-patch-authoring",
   "verification-gate",
-  "runbook-archival"
+  "runbook-archival",
+  "pull-request-review"
 ]);
 export type SkillName = z.infer<typeof skillNameSchema>;
 
@@ -59,7 +61,8 @@ export const startStepSchema = z
       "root-cause-localization": "repopilot-locator",
       "safe-patch-authoring": "repopilot-fixer",
       "verification-gate": "repopilot-verifier",
-      "runbook-archival": "repopilot-archivist"
+      "runbook-archival": "repopilot-archivist",
+      "pull-request-review": "repopilot-reviewer"
     };
     if (expectedAgentBySkill[input.skillName] !== input.agentName) {
       context.addIssue({
@@ -88,6 +91,12 @@ export const sourceSchema = z.discriminatedUnion("type", [
     type: z.literal("github_workflow_run"),
     repository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
     workflowRunId: z.number().int().positive()
+  }),
+  z.object({
+    type: z.literal("github_pull_request"),
+    repository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+    pullNumber: z.number().int().positive(),
+    headSha: z.string().regex(/^[a-f0-9]{40}$/i)
   })
 ]);
 export type RunSource = z.infer<typeof sourceSchema>;
@@ -109,6 +118,7 @@ export const evidenceTypeSchema = z.enum([
   "ci_result",
   "runbook",
   "proof_publication",
+  "review_publication",
   "error"
 ]);
 export type EvidenceType = z.infer<typeof evidenceTypeSchema>;
@@ -228,3 +238,16 @@ export {
   type ProofBundleMetric,
   type RunProofBundle
 } from "./proof.js";
+
+export {
+  pullRequestReviewFindingSchema,
+  pullRequestReviewMarker,
+  publishReviewCommentSchema,
+  renderPullRequestReviewComment,
+  reviewSeveritySchema,
+  reviewVerdictSchema,
+  type PullRequestReviewFinding,
+  type PublishReviewCommentInput,
+  type ReviewSeverity,
+  type ReviewVerdict
+} from "./review.js";

@@ -166,6 +166,47 @@ spec:
 apiVersion: agentteams.io/v1beta1
 kind: Worker
 metadata:
+  name: repopilot-reviewer
+spec:
+  model: ${AGENTTEAMS_MODEL}
+  runtime: copaw
+  image: ${AGENTTEAMS_COPAW_WORKER_IMAGE}
+  identity: |
+    Name: Reviewer
+    Role: Independent pull request review specialist
+    Capabilities: Read the exact PR revision, inspect changed files and checks, produce evidence-backed findings, and publish one managed general PR comment.
+    Cannot: Approve, request changes, modify code, push commits, merge, close PRs, delete branches, change permissions, or change secrets.
+    Inputs: RepoPilot run ID, repository, pull request number, immutable head SHA, and resolved PR metadata.
+    Outputs: PASS, NEEDS ATTENTION, or BLOCKED verdict; structured findings; managed review comment; publication evidence.
+    Dependencies: pull-request-review, RepoPilot MCP, GitHub REST, and repository-local read-only tools.
+    Decision Boundary: Autonomous advisory review only; no source mutation or merge authority.
+    Trace: Read operations, decisions, findings, and comment publication appended to the RepoPilot evidence chain.
+  soul: |
+    # Reviewer
+    You review the exact revision, distinguish proven defects from suggestions, and never turn an advisory verdict into merge authority.
+  agents: |
+    - Use pull-request-review exactly once for the Run head SHA.
+    - Call repopilot_start_step before review and repopilot_finish_step only after publication.
+    - Read PR metadata, every changed-file page, and checks through RepoPilot MCP.
+    - Publish only through repopilot_publish_review_comment.
+    - Stop when the PR head changes and wait for the next synchronize event.
+  skills:
+    - pull-request-review
+  mcpServers:
+    - name: repopilot
+      url: ${REPOPILOT_MCP_URL}
+      transport: http
+  resources:
+    requests:
+      cpu: 500m
+      memory: 768Mi
+    limits:
+      cpu: "3"
+      memory: 3Gi
+---
+apiVersion: agentteams.io/v1beta1
+kind: Worker
+metadata:
   name: repopilot-archivist
 spec:
   model: ${AGENTTEAMS_MODEL}
@@ -210,7 +251,7 @@ kind: Team
 metadata:
   name: repopilot-maintainers
 spec:
-  description: Auditable repository maintenance team for triage, root-cause localization, pull-request repair, independent verification, and Runbook archival.
+  description: Auditable repository maintenance and review team for triage, root-cause localization, pull-request repair, independent verification, managed PR review comments, and Runbook archival.
   heartbeatEvery: 15m
   peerMentions: true
   workerMembers:
@@ -223,4 +264,6 @@ spec:
     - name: repopilot-verifier
       role: worker
     - name: repopilot-archivist
+      role: worker
+    - name: repopilot-reviewer
       role: worker

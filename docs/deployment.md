@@ -29,6 +29,7 @@ Fresh Docker volume automatically runs:
 apps/control-plane/sql/001_init.sql
 apps/control-plane/sql/002_approval_consumption.sql
 apps/control-plane/sql/003_step_idempotency.sql
+apps/control-plane/sql/004_pull_request_source.sql
 ```
 
 从旧版 RepoPilot 升级已有数据库时，`001_init.sql` 已执行过，不要重复运行；后续迁移
@@ -39,6 +40,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f apps/control-plane/sql/002_approval_consumption.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f apps/control-plane/sql/003_step_idempotency.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f apps/control-plane/sql/004_pull_request_source.sql
 ```
 
 ## AgentTeams
@@ -78,6 +81,7 @@ Configure repository webhook:
 - Events:
   - Issues
   - Workflow runs
+  - Pull requests
 
 ## GitHub Token Permissions
 
@@ -86,7 +90,7 @@ RepoPilot 建议使用仅限目标仓库的 fine-grained personal access token �
 
 - `Contents: Read and write`：推送修复分支；
 - `Pull requests: Read and write`：创建 PR；
-- `Issues: Read and write`：创建或更新 PR 的 Proof Comment；
+- `Issues: Read and write`：创建或更新 PR 的 Proof Comment 与 Review Comment；
 - `Actions: Read` 与 `Checks: Read`：读取独立验证结果。
 
 不要授予仓库管理、密钥管理或组织管理权限。`GITHUB_ALLOWED_REPOSITORIES` 仍会在

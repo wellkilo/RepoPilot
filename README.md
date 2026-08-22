@@ -58,9 +58,9 @@
 
 <table>
   <tr>
-    <td align="center"><strong>5</strong><br /><sub>不同职能 Agent</sub></td>
-    <td align="center"><strong>11</strong><br /><sub>Streamable HTTP MCP 工具</sub></td>
-    <td align="center"><strong>27/27</strong><br /><sub>控制面可靠性测试</sub></td>
+    <td align="center"><strong>6</strong><br /><sub>不同职能 Agent</sub></td>
+    <td align="center"><strong>14</strong><br /><sub>Streamable HTTP MCP 工具</sub></td>
+    <td align="center"><strong>46/46</strong><br /><sub>控制面可靠性测试</sub></td>
     <td align="center"><strong>0</strong><br /><sub>未审批自动合并</sub></td>
   </tr>
 </table>
@@ -118,6 +118,11 @@ GitHub Issue / Failed CI
                                                 │
                                                 ▼
                                       Archivist 沉淀 Runbook
+
+GitHub Pull Request
+          │
+          ▼
+ Reviewer 固化 head SHA ──► 分页读取 Diff / Checks ──► 更新托管 Review Comment
 ```
 
 </div>
@@ -225,6 +230,11 @@ Proof Score 衡量证明完整性，不把控制面测试冒充模型修复质�
       <td>Runbook 查重、脱敏、结构化和沉淀</td>
       <td>不修改仓库或 GitHub 状态</td>
     </tr>
+    <tr>
+      <td><strong>Reviewer</strong></td>
+      <td>按不可变 head SHA 审查 PR 并发布结构化评论</td>
+      <td>不审批、不改代码、不合并</td>
+    </tr>
   </tbody>
 </table>
 
@@ -244,9 +254,9 @@ Skill 契约位于 [`skills/`](skills/)。
 <details>
   <summary><strong>Skill 与 MCP 工程化</strong></summary>
   <br />
-  提供 5 个 Apache-2.0 自定义 Skill 与统一版本化 Manifest；控制面暴露 11 个
+  提供 6 个 Apache-2.0 自定义 Skill 与统一版本化 Manifest；控制面暴露 14 个
   Streamable HTTP MCP 工具，覆盖 Agent Step、Evidence、审批、Runbook、Issue、PR、
-  Checks、PR Proof Comment 和受控合并。
+  Changed Files、Checks、PR Review Comment、PR Proof Comment 和受控合并。
 </details>
 
 <details>
@@ -275,7 +285,7 @@ Skill 契约位于 [`skills/`](skills/)。
 
 ```mermaid
 flowchart LR
-    GH[GitHub Issue / Failed CI] --> CP[RepoPilot Control Plane]
+    GH[GitHub Issue / Failed CI / Pull Request] --> CP[RepoPilot Control Plane]
     CP --> DB[(PostgreSQL + pgvector)]
     CP --> MX[Matrix Admin → Manager DM]
     MX --> M[AgentTeams Manager]
@@ -284,7 +294,9 @@ flowchart LR
     TL --> F[Fixer]
     TL --> V[Verifier]
     TL --> A[Archivist]
+    M --> R[Reviewer]
     L & F & V & A --> MCP[RepoPilot MCP via Higress]
+    R --> MCP
     MCP --> GHAPI[GitHub REST API]
     MCP --> DB
     DB --> UI[Evidence Console]
@@ -302,7 +314,7 @@ RepoPilot/
 │   └── console/             # 飞行记录器风格 React 证据控制台
 ├── packages/contracts/      # Zod Schema、共享类型和显式状态机
 ├── deploy/agentteams/       # AgentTeams v1.2.2 Worker / Team 清单
-├── skills/                  # 5 个可复用 RepoPilot Skills
+├── skills/                  # 6 个可复用 RepoPilot Skills
 ├── evaluation/              # Proof Bundle 协议与复赛 Benchmark
 ├── scripts/                 # Skill 校验、可靠性基线与离线评测
 ├── competition/             # 初赛简介、评审映射和提交清单
@@ -362,9 +374,14 @@ curl -X POST http://127.0.0.1:3000/api/v1/runs \
 需要读取 GitHub Issue 时，在本机 `.env` 配置 `GITHUB_TOKEN`。如果没有配置
 AgentTeams Matrix，Run 会停在 `awaiting_dispatch`，不会用 Mock Agent 伪造执行结果。
 
+绑定仓库 Webhook 的 `Pull requests` 事件后，非 Draft PR 的创建、重新打开、推送新
+提交或转为 Ready for review 都会触发独立审查 Run。Reviewer 读取 PR、分页 diff 和
+Checks，并幂等创建或更新一条 `RepoPilot PR Review` 评论；若 PR 在审查期间产生新
+提交，旧 Run 会因 head SHA 不一致而拒绝发布。
+
 ## AgentTeams 真实协作
 
-真实五 Agent 推理需要一个 OpenAI 兼容模型端点，可以使用：
+真实 Agent 推理需要一个 OpenAI 兼容模型端点，可以使用：
 
 - 阿里云百炼等托管服务；
 - 其他 OpenAI 兼容 API；
@@ -419,9 +436,10 @@ pnpm format:check
 pnpm build
 ```
 
-当前控制面可靠性基线为 `27/27`。测试覆盖状态机、Webhook 验签、证据哈希、数据库
+当前控制面可靠性基线为 `46/46`。测试覆盖状态机、Webhook 验签、证据哈希、数据库
 不可变触发器、delivery 并发幂等、审批版本与一次性消费、Agent Skill Step 生命周期、
-Proof Bundle 评分、HTTP 冲突语义及控制台标签。CI 生成结构化 JSON 报告。
+Proof Bundle 评分、PR Review 来源与 stale SHA 防护、HTTP 冲突语义及控制台标签。
+CI 生成结构化 JSON 报告。
 
 ## 安全边界
 
@@ -432,8 +450,8 @@ Proof Bundle 评分、HTTP 冲突语义及控制台标签。CI 生成结构化 J
   </tr>
   <tr>
     <td>
-      读取 Issue / CI、创建分支与提交、推送非保护分支、创建 Pull Request、读取 Checks、
-      记录 evidence
+      读取 Issue / PR / CI、创建分支与提交、推送非保护分支、创建 Pull Request、
+      创建或更新托管审查评论、读取 Checks、记录 evidence
     </td>
     <td>
       合并 Pull Request、删除分支、破坏性回滚、修改权限、修改密钥、执行其他高风险工具

@@ -5,7 +5,7 @@ RepoPilot targets AgentTeams `v1.2.2` and the `agentteams.io/v1beta1` Worker and
 ## Prerequisites
 
 - AgentTeams `v1.2.2`
-- Five complete RepoPilot Skill directories installed into the Manager Worker Skill library
+- Six complete RepoPilot Skill directories installed into the Manager Worker Skill library
 - Official `alibabacloud-agentloop-experience` Skill installed when AgentLoop Recall is enabled
 - RepoPilot MCP exposed through Higress, for example:
 
@@ -50,7 +50,7 @@ agt get teams -o json
 
 Expected state:
 
-- all five Workers: `Running`
+- all six Workers: `Running`
 - `repopilot-maintainers`: `Active`
 - exactly one `team_leader`
 - every Worker has the RepoPilot MCP endpoint assigned

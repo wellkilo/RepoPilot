@@ -3,16 +3,112 @@ import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { RepoPilotStore } from "./db.js";
+import { GitHubClient } from "./clients/github.js";
+import { RunService } from "./services/run-service.js";
 
 const databaseUrl =
   process.env.TEST_DATABASE_URL ?? "postgres://repopilot:repopilot@localhost:5432/repopilot";
 const store = new RepoPilotStore(databaseUrl);
+const runService = new RunService(
+  store,
+  new GitHubClient(undefined),
+  undefined,
+  new Set(["wellkilo/repopilot-testbed"])
+);
 
 afterAll(async () => {
   await store.close();
 });
 
 describe("RepoPilotStore integration", () => {
+  it("persists the pull request number and immutable review head", async () => {
+    const headSha = "a".repeat(40);
+    const run = await store.createRun({
+      source: {
+        type: "github_pull_request",
+        repository: "wellkilo/repopilot-testbed",
+        pullNumber: Math.floor(Date.now() / 1000),
+        headSha
+      },
+      executionPolicy: "pull_request_only"
+    });
+
+    await expect(store.getRun(run.id)).resolves.toMatchObject({
+      source: {
+        type: "github_pull_request",
+        repository: "wellkilo/repopilot-testbed",
+        pullNumber: run.source.type === "github_pull_request" ? run.source.pullNumber : -1,
+        headSha
+      }
+    });
+  });
+
+  it("does not complete a review run before its managed comment is published", async () => {
+    const headSha = "b".repeat(40);
+    const run = await store.createRun({
+      source: {
+        type: "github_pull_request",
+        repository: "wellkilo/repopilot-testbed",
+        pullNumber: Math.floor(Date.now() / 1000) + 10,
+        headSha
+      },
+      executionPolicy: "pull_request_only"
+    });
+    await store.transitionRun(run.id, "dispatched");
+    await expect(
+      runService.startStep({
+        runId: run.id,
+        agentName: "repopilot-fixer",
+        skillName: "safe-patch-authoring",
+        idempotencyKey: `forbidden-fix-${headSha}`
+      })
+    ).rejects.toThrow("can only execute pull-request-review");
+    await expect(
+      runService.requestApproval({
+        runId: run.id,
+        action: "merge_pull_request",
+        riskLevel: "high",
+        details: {
+          pullNumber: run.source.type === "github_pull_request" ? run.source.pullNumber : -1
+        }
+      })
+    ).rejects.toThrow("cannot request high-risk actions");
+    const step = await runService.startStep({
+      runId: run.id,
+      agentName: "repopilot-reviewer",
+      skillName: "pull-request-review",
+      idempotencyKey: `review-${headSha}`
+    });
+
+    await expect(
+      runService.finishStep({
+        stepId: step.id,
+        status: "succeeded",
+        summary: "Review completed without publication."
+      })
+    ).rejects.toThrow("cannot succeed before its managed comment is published");
+
+    await store.appendEvidence({
+      runId: run.id,
+      stepId: step.id,
+      evidenceType: "review_publication",
+      payload: {
+        operation: "publish_review_comment",
+        repository: "wellkilo/repopilot-testbed",
+        pullNumber: run.source.type === "github_pull_request" ? run.source.pullNumber : -1,
+        headSha
+      }
+    });
+    await expect(
+      runService.finishStep({
+        stepId: step.id,
+        status: "succeeded",
+        summary: "Managed review comment published for the bound revision."
+      })
+    ).resolves.toMatchObject({ status: "succeeded", skillName: "pull-request-review" });
+    await expect(store.getRun(run.id)).resolves.toMatchObject({ status: "succeeded" });
+  });
+
   it("creates a run and verifies its append-only evidence hash chain", async () => {
     const issueNumber = Math.floor(Date.now() / 1000);
     const run = await store.createRun({

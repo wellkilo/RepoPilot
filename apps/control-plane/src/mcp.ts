@@ -8,7 +8,10 @@ import {
   evaluateRunProofBundle,
   finishStepSchema,
   proofCommentMarker,
+  publishReviewCommentSchema,
   publishProofCommentSchema,
+  pullRequestReviewMarker,
+  renderPullRequestReviewComment,
   renderProofComment,
   requestApprovalSchema,
   runbookSearchSchema,
@@ -131,6 +134,7 @@ export function createRepoPilotMcpServer(dependencies: {
     },
     async (input) => {
       const parsed = appendEvidenceSchema.parse(input);
+      assertExternallyAppendableEvidenceType(parsed.evidenceType);
       return toolResult(
         await observedTool(
           "repopilot_append_evidence",
@@ -202,8 +206,9 @@ export function createRepoPilotMcpServer(dependencies: {
         sourceRunId: z.string().uuid()
       }
     },
-    async (input) =>
-      toolResult(
+    async (input) => {
+      await assertMaintenanceRunTarget(store, input.sourceRunId, input.repository);
+      return toolResult(
         await observedTool(
           "repopilot_write_runbook",
           {
@@ -212,7 +217,8 @@ export function createRepoPilotMcpServer(dependencies: {
           },
           () => store.writeRunbook(input)
         )
-      )
+      );
+    }
   );
 
   server.registerTool(
@@ -241,6 +247,105 @@ export function createRepoPilotMcpServer(dependencies: {
   );
 
   server.registerTool(
+    "github_get_pull_request",
+    {
+      description:
+        "Read pull request metadata from an allowed repository for a read-only RepoPilot review.",
+      inputSchema: {
+        runId: z.string().uuid(),
+        repository: repositorySchema,
+        pullNumber: z.number().int().positive()
+      }
+    },
+    async ({ runId, repository, pullNumber }) => {
+      assertAllowedRepository(repository);
+      const detail = await requirePullRequestReviewRun(store, runId, repository, pullNumber);
+      const { owner, name } = splitRepository(repository);
+      return toolResult(
+        await observedTool(
+          "github_get_pull_request",
+          {
+            "repopilot.run_id": runId,
+            "repopilot.repository": repository,
+            "repopilot.pull_request.number": pullNumber
+          },
+          async () => {
+            const pullRequest = await github.getPullRequest(owner, name, pullNumber);
+            assertCurrentPullRequestHead(
+              repository,
+              pullNumber,
+              detail.source.headSha,
+              pullRequest.headSha
+            );
+            return pullRequest;
+          }
+        )
+      );
+    }
+  );
+
+  server.registerTool(
+    "github_list_pull_request_files",
+    {
+      description:
+        "Read one page of changed files and GitHub diff patches for the pull request bound to a RepoPilot review run.",
+      inputSchema: {
+        runId: z.string().uuid(),
+        repository: repositorySchema,
+        pullNumber: z.number().int().positive(),
+        page: z.number().int().min(1).max(30).default(1)
+      }
+    },
+    async ({ runId, repository, pullNumber, page }) => {
+      assertAllowedRepository(repository);
+      const detail = await requirePullRequestReviewRun(store, runId, repository, pullNumber);
+      const { owner, name } = splitRepository(repository);
+      return toolResult(
+        await observedTool(
+          "github_list_pull_request_files",
+          {
+            "repopilot.run_id": runId,
+            "repopilot.repository": repository,
+            "repopilot.pull_request.number": pullNumber,
+            "repopilot.pull_request.files_page": page
+          },
+          async () => {
+            const pullRequest = await github.getPullRequest(owner, name, pullNumber);
+            assertCurrentPullRequestHead(
+              repository,
+              pullNumber,
+              detail.source.headSha,
+              pullRequest.headSha
+            );
+            const files = await github.getPullRequestFilesPage(owner, name, pullNumber, page);
+            const confirmedPullRequest = await github.getPullRequest(owner, name, pullNumber);
+            assertCurrentPullRequestHead(
+              repository,
+              pullNumber,
+              detail.source.headSha,
+              confirmedPullRequest.headSha
+            );
+            return {
+              page,
+              files: files.map((file) => ({
+                sha: file.sha,
+                filename: file.filename,
+                status: file.status,
+                additions: file.additions,
+                deletions: file.deletions,
+                changes: file.changes,
+                patch: file.patch,
+                blobUrl: file.blobUrl
+              })),
+              hasNextPage: files.length === 100
+            };
+          }
+        )
+      );
+    }
+  );
+
+  server.registerTool(
     "github_create_pull_request",
     {
       description:
@@ -256,6 +361,7 @@ export function createRepoPilotMcpServer(dependencies: {
     },
     async ({ runId, repository, title, body, head, base }) => {
       assertAllowedRepository(repository);
+      await assertMaintenanceRunTarget(store, runId, repository);
       const { owner, name } = splitRepository(repository);
       return toolResult(
         await observedTool(
@@ -304,6 +410,12 @@ export function createRepoPilotMcpServer(dependencies: {
     },
     async ({ runId, repository, pullNumber }) => {
       assertAllowedRepository(repository);
+      const run = await requireRunForRepository(store, runId, repository);
+      if (run.source.type === "github_pull_request" && run.source.pullNumber !== pullNumber) {
+        throw new Error(
+          `Run ${runId} belongs to pull request #${run.source.pullNumber}, not #${pullNumber}`
+        );
+      }
       const { owner, name } = splitRepository(repository);
       return toolResult(
         await observedTool(
@@ -315,6 +427,9 @@ export function createRepoPilotMcpServer(dependencies: {
           },
           async () => {
             const result = await github.getPullRequestChecks(owner, name, pullNumber);
+            if (run.source.type === "github_pull_request") {
+              assertCurrentPullRequestHead(repository, pullNumber, run.source.headSha, result.sha);
+            }
             await store.appendEvidence({
               runId,
               evidenceType: "ci_result",
@@ -414,6 +529,82 @@ export function createRepoPilotMcpServer(dependencies: {
   );
 
   server.registerTool(
+    "repopilot_publish_review_comment",
+    {
+      description:
+        "Idempotently create or update the managed read-only RepoPilot review comment for the exact pull request head SHA bound to this run.",
+      inputSchema: publishReviewCommentSchema.shape
+    },
+    async (input) => {
+      const parsed = publishReviewCommentSchema.parse(input);
+      assertAllowedRepository(parsed.repository);
+      const detail = await requirePullRequestReviewRun(
+        store,
+        parsed.runId,
+        parsed.repository,
+        parsed.pullNumber
+      );
+      assertPullRequestReviewHead(detail, parsed.headSha);
+      assertReviewPublicationReady(detail);
+      const { owner, name } = splitRepository(parsed.repository);
+      return toolResult(
+        await observedTool(
+          "repopilot_publish_review_comment",
+          {
+            "repopilot.run_id": parsed.runId,
+            "repopilot.repository": parsed.repository,
+            "repopilot.pull_request.number": parsed.pullNumber,
+            "repopilot.review.verdict": parsed.verdict
+          },
+          async () => {
+            const result = await store.withAdvisoryLock(
+              `review-comment:${parsed.repository.toLowerCase()}#${parsed.pullNumber}`,
+              async () => {
+                const pullRequest = await github.getPullRequest(owner, name, parsed.pullNumber);
+                assertCurrentPullRequestHead(
+                  parsed.repository,
+                  parsed.pullNumber,
+                  parsed.headSha,
+                  pullRequest.headSha
+                );
+                const result = await github.upsertPullRequestComment(
+                  owner,
+                  name,
+                  parsed.pullNumber,
+                  pullRequestReviewMarker,
+                  renderPullRequestReviewComment(parsed)
+                );
+                return result;
+              }
+            );
+            await store.appendEvidence({
+              runId: parsed.runId,
+              evidenceType: "review_publication",
+              payload: {
+                operation: "publish_review_comment",
+                repository: parsed.repository,
+                pullNumber: parsed.pullNumber,
+                headSha: parsed.headSha,
+                verdict: parsed.verdict,
+                findingCount: parsed.findings.length,
+                comment: result
+              }
+            });
+            return {
+              ...result,
+              runId: parsed.runId,
+              pullNumber: parsed.pullNumber,
+              headSha: parsed.headSha,
+              verdict: parsed.verdict,
+              findingCount: parsed.findings.length
+            };
+          }
+        )
+      );
+    }
+  );
+
+  server.registerTool(
     "github_merge_pull_request",
     {
       description:
@@ -429,6 +620,7 @@ export function createRepoPilotMcpServer(dependencies: {
     },
     async ({ runId, repository, pullNumber, approvalId, approvalVersion, commitTitle }) => {
       assertAllowedRepository(repository);
+      await assertMaintenanceRunTarget(store, runId, repository);
       return toolResult(
         await observedTool(
           "github_merge_pull_request",
@@ -503,6 +695,9 @@ export function assertProofPublicationTarget(
   repository: string,
   pullNumber: number
 ): void {
+  if (detail.source.type === "github_pull_request") {
+    throw new Error(`Pull request review Run ${detail.id} cannot publish a maintenance proof`);
+  }
   if (detail.source.repository.toLowerCase() !== repository.toLowerCase()) {
     throw new Error(`Run ${detail.id} belongs to ${detail.source.repository}, not ${repository}`);
   }
@@ -514,6 +709,118 @@ export function assertProofPublicationTarget(
   if (!hasPullRequestEvidence(detail.evidence, repository, pullNumber)) {
     throw new Error(`Pull request ${repository}#${pullNumber} is not linked to Run ${detail.id}`);
   }
+}
+
+export async function assertPullRequestReviewTarget(
+  store: RepoPilotStore,
+  runId: string,
+  repository: string,
+  pullNumber: number
+): Promise<void> {
+  await requirePullRequestReviewRun(store, runId, repository, pullNumber);
+}
+
+export function assertMaintenanceRunSource(detail: RunDetail): void {
+  if (detail.source.type === "github_pull_request") {
+    throw new Error(`Pull request review Run ${detail.id} cannot mutate repository state`);
+  }
+}
+
+export function assertExternallyAppendableEvidenceType(
+  evidenceType: RunDetail["evidence"][number]["evidenceType"]
+): void {
+  if (evidenceType === "proof_publication" || evidenceType === "review_publication") {
+    throw new Error(`${evidenceType} is reserved for the corresponding RepoPilot publication tool`);
+  }
+}
+
+export function assertPullRequestReviewHead(
+  detail: RunDetail,
+  headSha: string
+): asserts detail is RunDetail & {
+  source: Extract<RunDetail["source"], { type: "github_pull_request" }>;
+} {
+  if (detail.source.type !== "github_pull_request") {
+    throw new Error(`Run ${detail.id} is not a pull request review run`);
+  }
+  if (detail.source.headSha.toLowerCase() !== headSha.toLowerCase()) {
+    throw new Error(`Run ${detail.id} is bound to head ${detail.source.headSha}, not ${headSha}`);
+  }
+}
+
+export function assertReviewPublicationReady(detail: RunDetail): void {
+  if (detail.status !== "running") {
+    throw new Error(
+      `Pull request review Run ${detail.id} must be running before publishing; current status is ${detail.status}`
+    );
+  }
+  const activeReviewStep = detail.steps.some(
+    (step) =>
+      step.agentName === "repopilot-reviewer" &&
+      step.skillName === "pull-request-review" &&
+      step.status === "running"
+  );
+  if (!activeReviewStep) {
+    throw new Error(
+      `Pull request review Run ${detail.id} requires an active pull-request-review Step`
+    );
+  }
+}
+
+export function assertCurrentPullRequestHead(
+  repository: string,
+  pullNumber: number,
+  expectedHeadSha: string,
+  currentHeadSha: string
+): void {
+  if (currentHeadSha.toLowerCase() !== expectedHeadSha.toLowerCase()) {
+    throw new Error(
+      `Pull request ${repository}#${pullNumber} head changed from ${expectedHeadSha} to ${currentHeadSha}; refusing stale review publication`
+    );
+  }
+}
+
+async function requireRunForRepository(
+  store: RepoPilotStore,
+  runId: string,
+  repository: string
+): Promise<RunDetail> {
+  const detail = await store.getRunDetail(runId);
+  if (!detail) {
+    throw new Error(`Run ${runId} was not found`);
+  }
+  if (detail.source.repository.toLowerCase() !== repository.toLowerCase()) {
+    throw new Error(`Run ${runId} belongs to ${detail.source.repository}, not ${repository}`);
+  }
+  return detail;
+}
+
+async function assertMaintenanceRunTarget(
+  store: RepoPilotStore,
+  runId: string,
+  repository: string
+): Promise<void> {
+  assertMaintenanceRunSource(await requireRunForRepository(store, runId, repository));
+}
+
+async function requirePullRequestReviewRun(
+  store: RepoPilotStore,
+  runId: string,
+  repository: string,
+  pullNumber: number
+): Promise<RunDetail & { source: Extract<RunDetail["source"], { type: "github_pull_request" }> }> {
+  const detail = await requireRunForRepository(store, runId, repository);
+  if (detail.source.type !== "github_pull_request") {
+    throw new Error(`Run ${runId} is not a pull request review run`);
+  }
+  if (detail.source.pullNumber !== pullNumber) {
+    throw new Error(
+      `Run ${runId} belongs to pull request #${detail.source.pullNumber}, not #${pullNumber}`
+    );
+  }
+  return detail as RunDetail & {
+    source: Extract<RunDetail["source"], { type: "github_pull_request" }>;
+  };
 }
 
 export async function handleMcpRequest(

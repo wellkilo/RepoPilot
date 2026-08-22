@@ -173,6 +173,10 @@ export function evaluateRunProofBundle(
   bundle: RunProofBundle,
   evaluatedAt = new Date().toISOString()
 ): ProofBundleEvaluation {
+  if (bundle.run.source.type === "github_pull_request") {
+    return evaluatePullRequestReviewProof(bundle, evaluatedAt);
+  }
+
   const completedSkills = new Set(
     bundle.steps.filter((step) => step.status === "succeeded").map((step) => step.skillName)
   );
@@ -304,6 +308,140 @@ export function evaluateRunProofBundle(
     ...(runbookEvidence.length > 0 ? [] : ["缺少运行结果到 Runbook 的经验沉淀"]),
     ...(proofPublicationEvidence.length > 0 ? [] : ["缺少 Pull Request Proof 发布证据"]),
     ...(unsafeMergeEvidence.length === 0 ? [] : ["检测到未绑定已消费审批的合并证据"])
+  ];
+
+  return {
+    evaluatorVersion: "1.0",
+    evaluatedAt,
+    score,
+    grade:
+      score >= 90 && findings.length === 0 ? "verified" : score >= 60 ? "partial" : "insufficient",
+    dimensions: {
+      coordination,
+      skillEngineering,
+      verification,
+      safetyAuditability,
+      learningReuse
+    },
+    metrics,
+    findings
+  };
+}
+
+function evaluatePullRequestReviewProof(
+  bundle: RunProofBundle,
+  evaluatedAt: string
+): ProofBundleEvaluation {
+  if (bundle.run.source.type !== "github_pull_request") {
+    throw new Error("Pull request review proof requires a github_pull_request source");
+  }
+  const reviewSource = bundle.run.source;
+  const reviewSteps = bundle.steps.filter(
+    (step) => step.agentName === "repopilot-reviewer" && step.skillName === "pull-request-review"
+  );
+  const successfulReviewSteps = reviewSteps.filter((step) => step.status === "succeeded");
+  const sourceContextEvidence = bundle.evidence.filter(
+    (entry) => entry.evidenceType === "tool_result" && entry.payload.tool === "github.get_source"
+  );
+  const reviewDecisionEvidence = bundle.evidence.filter(
+    (entry) => entry.evidenceType === "decision"
+  );
+  const ciEvidence = bundle.evidence.filter((entry) => entry.evidenceType === "ci_result");
+  const reviewPublicationEvidence = bundle.evidence.filter(
+    (entry) =>
+      entry.evidenceType === "review_publication" &&
+      typeof entry.payload.repository === "string" &&
+      entry.payload.repository.toLowerCase() === reviewSource.repository.toLowerCase() &&
+      entry.payload.pullNumber === reviewSource.pullNumber &&
+      typeof entry.payload.headSha === "string" &&
+      entry.payload.headSha.toLowerCase() === reviewSource.headSha.toLowerCase()
+  );
+  const unsafeMutationEvidence = bundle.evidence.filter(
+    (entry) =>
+      entry.evidenceType === "git_reference" &&
+      (entry.payload.operation === "create_pull_request" ||
+        entry.payload.operation === "merge_pull_request")
+  );
+
+  const coordination =
+    (reviewSteps.length > 0 ? 10 : 0) +
+    (reviewSteps.some((step) => terminalStepStatuses.has(step.status)) ? 10 : 0) +
+    (bundle.run.status === "succeeded" ? 5 : 0);
+  const skillEngineering = successfulReviewSteps.length > 0 ? 20 : 0;
+  const verification =
+    (bundle.integrity.chainValid ? 6 : 0) +
+    (sourceContextEvidence.length > 0 ? 4 : 0) +
+    (ciEvidence.length > 0 ? 5 : 0) +
+    (reviewPublicationEvidence.length > 0 ? 10 : 0);
+  const safetyAuditability =
+    (bundle.run.executionPolicy === "pull_request_only" ? 5 : 0) +
+    (unsafeMutationEvidence.length === 0 ? 10 : 0) +
+    (reviewSource.headSha.length === 40 ? 5 : 0);
+  const learningReuse = reviewDecisionEvidence.length > 0 ? 10 : 0;
+  const score = coordination + skillEngineering + verification + safetyAuditability + learningReuse;
+
+  const metrics: ProofBundleMetric[] = [
+    metric(
+      "reviewer_participation",
+      "Reviewer 参与",
+      reviewSteps.length,
+      1,
+      "count",
+      reviewSteps.map((step) => step.id)
+    ),
+    metric(
+      "review_skill_completion",
+      "PR Review Skill 完成",
+      successfulReviewSteps.length,
+      1,
+      "count",
+      successfulReviewSteps.map((step) => step.id)
+    ),
+    metric(
+      "source_context",
+      "PR 来源上下文",
+      sourceContextEvidence.length,
+      1,
+      "count",
+      sourceContextEvidence.map((entry) => entry.id)
+    ),
+    metric(
+      "ci_observation",
+      "PR Checks 证据",
+      ciEvidence.length,
+      1,
+      "count",
+      ciEvidence.map((entry) => entry.id)
+    ),
+    metric(
+      "review_publication",
+      "PR Review Comment 发布",
+      reviewPublicationEvidence.length,
+      1,
+      "count",
+      reviewPublicationEvidence.map((entry) => entry.id)
+    ),
+    metric(
+      "unsafe_review_mutation",
+      "Review Run 越权仓库写操作",
+      unsafeMutationEvidence.length,
+      0,
+      "count",
+      unsafeMutationEvidence.map((entry) => entry.id),
+      true
+    )
+  ];
+  const findings = [
+    ...(reviewSteps.length > 0 ? [] : ["缺少 Reviewer Step"]),
+    ...(successfulReviewSteps.length > 0 ? [] : ["缺少成功完成的 pull-request-review Skill"]),
+    ...(bundle.integrity.chainValid ? [] : ["Evidence 哈希链验证失败"]),
+    ...(sourceContextEvidence.length > 0 ? [] : ["缺少 Pull Request 来源上下文"]),
+    ...(ciEvidence.length > 0 ? [] : ["缺少 Pull Request Checks 证据"]),
+    ...(reviewDecisionEvidence.length > 0 ? [] : ["缺少结构化审查决策 Evidence"]),
+    ...(reviewPublicationEvidence.length > 0
+      ? []
+      : ["缺少当前 head SHA 的 Review Comment 发布证据"]),
+    ...(unsafeMutationEvidence.length === 0 ? [] : ["检测到 PR Review Run 的越权仓库写操作"])
   ];
 
   return {

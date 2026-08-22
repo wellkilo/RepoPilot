@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RunDetail } from "./index.js";
+import type { EvidenceRecord, RunDetail } from "./index.js";
 import {
   buildRunProofBundle,
   evaluateRunProofBundle,
@@ -137,5 +137,70 @@ describe("proof bundle evaluation", () => {
     expect(evaluation.score).toBe(95);
     expect(evaluation.grade).toBe("partial");
     expect(evaluation.findings).toContain("缺少 Pull Request Proof 发布证据");
+  });
+
+  it("evaluates a pull request review run against its dedicated evidence contract", () => {
+    const detail = buildDetail();
+    detail.source = {
+      type: "github_pull_request",
+      repository: "wellkilo/repopilot-testbed",
+      pullNumber: 7,
+      headSha: "a".repeat(40)
+    };
+    detail.steps = [
+      {
+        id: "00000000-0000-4000-8000-000000000009",
+        runId: detail.id,
+        agentName: "repopilot-reviewer",
+        skillName: "pull-request-review",
+        status: "succeeded",
+        summary: "Published an evidence-backed review.",
+        startedAt: timestamp,
+        endedAt: timestamp,
+        createdAt: timestamp
+      }
+    ];
+    const reviewEvidence: Array<
+      readonly [EvidenceRecord["evidenceType"], Record<string, unknown>]
+    > = [
+      ["input", { source: detail.source }],
+      ["tool_result", { tool: "github.get_source" }],
+      ["decision", { verdict: "pass", summary: "No actionable findings." }],
+      ["ci_result", { state: "success" }],
+      [
+        "review_publication",
+        {
+          repository: detail.source.repository,
+          pullNumber: detail.source.pullNumber,
+          headSha: detail.source.headSha
+        }
+      ]
+    ];
+    detail.evidence = reviewEvidence.map(([evidenceType, payload], index) => ({
+      id: String(index + 1),
+      runId: detail.id,
+      stepId: null,
+      evidenceType,
+      payload,
+      payloadHash: `review-payload-${index}`,
+      previousHash: index === 0 ? null : `review-chain-${index - 1}`,
+      chainHash: `review-chain-${index}`,
+      createdAt: timestamp
+    }));
+
+    const evaluation = evaluateRunProofBundle(buildRunProofBundle(detail, true, timestamp));
+
+    expect(evaluation).toMatchObject({
+      score: 100,
+      grade: "verified",
+      dimensions: {
+        coordination: 25,
+        skillEngineering: 20,
+        verification: 25,
+        safetyAuditability: 20,
+        learningReuse: 10
+      },
+      findings: []
+    });
   });
 });

@@ -31,7 +31,9 @@ Team 关键字段：
 - `spec.heartbeatEvery`
 - `spec.peerMentions`
 
-RepoPilot 使用 1 个 Team Leader 和 4 个 Worker。清单位于 `deploy/agentteams/repopilot-team.yaml`。
+RepoPilot 使用 1 个 Team Leader 和 5 个 Worker。Issue / CI 维护 Run 由 Leader
+编排 Locator、Fixer、Verifier、Archivist；PR 审查 Run 直接交给只读 Reviewer。
+清单位于 `deploy/agentteams/repopilot-team.yaml`。
 
 ### Matrix Task Injection
 
@@ -105,15 +107,19 @@ X-GitHub-Api-Version: 2022-11-28
 User-Agent: RepoPilot/0.1
 ```
 
-| 用途                 | Method                                                |
-| -------------------- | ----------------------------------------------------- |
-| 读取 Issue           | `GET /repos/{owner}/{repo}/issues/{issue_number}`     |
-| 读取 Workflow Run    | `GET /repos/{owner}/{repo}/actions/runs/{run_id}`     |
-| 创建 Pull Request    | `POST /repos/{owner}/{repo}/pulls`                    |
-| 读取 PR Head SHA     | `GET /repos/{owner}/{repo}/pulls/{pull_number}`       |
-| 读取 Combined Status | `GET /repos/{owner}/{repo}/commits/{sha}/status`      |
-| 读取 Check Runs      | `GET /repos/{owner}/{repo}/commits/{sha}/check-runs`  |
-| 合并 Pull Request    | `PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge` |
+| 用途                 | Method                                                     |
+| -------------------- | ---------------------------------------------------------- |
+| 读取 Issue           | `GET /repos/{owner}/{repo}/issues/{issue_number}`          |
+| 读取 Workflow Run    | `GET /repos/{owner}/{repo}/actions/runs/{run_id}`          |
+| 创建 Pull Request    | `POST /repos/{owner}/{repo}/pulls`                         |
+| 读取 PR 元数据       | `GET /repos/{owner}/{repo}/pulls/{pull_number}`            |
+| 读取 PR 变更文件     | `GET /repos/{owner}/{repo}/pulls/{pull_number}/files`      |
+| 读取 Combined Status | `GET /repos/{owner}/{repo}/commits/{sha}/status`           |
+| 读取 Check Runs      | `GET /repos/{owner}/{repo}/commits/{sha}/check-runs`       |
+| 列出 PR 普通评论     | `GET /repos/{owner}/{repo}/issues/{pull_number}/comments`  |
+| 创建 PR 普通评论     | `POST /repos/{owner}/{repo}/issues/{pull_number}/comments` |
+| 更新 PR 普通评论     | `PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}` |
+| 合并 Pull Request    | `PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge`      |
 
 错误处理：
 
@@ -278,6 +284,38 @@ AgentTeams Archivist
 创建。评论不包含原始 Evidence payload、工具输出或仓库私有内容，只发布评分、
 Agent/Skill 结果、证据数量和链根，并附带等价的机器可解析 JSON 摘要。Run 未进入
 终态、仓库不匹配或目标 PR 未记录在该 Run 的证据中时拒绝发布。
+
+## Pull Request Review Comment
+
+`pull_request.opened | reopened | synchronize | ready_for_review` 经 HMAC 验签后创建
+`github_pull_request` Run。Run 在创建时固化 `repository + pullNumber + headSha`，并
+读取 PR 元数据和变更文件摘要后，通过 Matrix 派发给 `repopilot-reviewer`。
+
+Reviewer 的真实调用链为：
+
+```text
+GitHub pull_request webhook
+  -> RepoPilot Run
+  -> AgentTeams Manager
+  -> repopilot-reviewer / pull-request-review
+  -> github_get_pull_request
+  -> github_list_pull_request_files (paged)
+  -> github_get_pull_request_checks
+  -> repopilot_publish_review_comment
+  -> GitHub Issue Comments REST API
+```
+
+PR 元数据、文件分页、Checks 和最终发布都会校验 GitHub 当前 head SHA 与 Run
+head SHA；发布时再同时校验工具输入 head SHA。任一不一致都拒绝继续，避免旧 Run
+混入新 revision 的证据或覆盖新 revision 的审查。评论使用固定
+`<!-- repopilot-review -->` marker，通过分页列出已有评论后选择 `POST` 或 `PATCH`，
+从而保证同一 PR 始终只有一条 RepoPilot Review Comment。
+
+评论 Schema 限制 finding 数量和单项长度，控制 GitHub 评论体积；输出只包含 verdict、
+summary、结构化 finding 和审查 revision。该工具只写普通 PR conversation comment，
+不调用 GitHub Reviews 的 approve / request changes 接口，也不具备代码修改或合并能力。
+成功发布会追加 `review_publication` Evidence；`pull-request-review` Step 只有存在与
+Run 仓库、PR、head SHA 完全一致的发布证据时才能进入 `succeeded`。
 
 ## Alibaba Cloud Official Skill
 

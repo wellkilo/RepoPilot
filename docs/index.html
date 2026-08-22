@@ -115,15 +115,15 @@
             </div>
             <dl class="hero-metrics" aria-label="项目核心指标">
               <div>
-                <dt>5</dt>
+                <dt>6</dt>
                 <dd>职能 Agent</dd>
               </div>
               <div>
-                <dt>11</dt>
+                <dt>14</dt>
                 <dd>MCP Tools</dd>
               </div>
               <div>
-                <dt>27/27</dt>
+                <dt>46/46</dt>
                 <dd>可靠性测试</dd>
               </div>
               <div>
@@ -344,14 +344,14 @@
                 <span class="loop-owner" data-loop-owner>CONTROL PLANE</span>
                 <h3 data-loop-title>任务输入</h3>
                 <p data-loop-copy>
-                  接收 GitHub Issue 或失败 Workflow Run。原始请求经过 HMAC-SHA256 验签，仓库必须命中
-                  allowlist。
+                  接收 GitHub Issue、失败 Workflow Run 或 Pull Request。原始请求经过 HMAC-SHA256
+                  验签，仓库必须命中 allowlist。
                 </p>
               </div>
               <dl>
                 <div>
                   <dt>INPUT</dt>
-                  <dd data-loop-input>Issue / Failed CI / Policy</dd>
+                  <dd data-loop-input>Issue / Failed CI / PR / Policy</dd>
                 </div>
                 <div>
                   <dt>OUTPUT</dt>
@@ -745,7 +745,7 @@
               <span>02</span>
               <div>
                 <h3>多 Agent 协同层</h3>
-                <p>Repo Lead · Locator · Fixer · Verifier · Archivist</p>
+                <p>Repo Lead · Locator · Fixer · Verifier · Archivist · Reviewer</p>
               </div>
               <strong>COLLABORATE</strong>
             </article>
@@ -753,7 +753,7 @@
               <span>03</span>
               <div>
                 <h3>Skill / MCP 能力层</h3>
-                <p>5 Versioned Skills · 11 MCP Tools · GitHub REST · AgentLoop Recall</p>
+                <p>6 Versioned Skills · 14 MCP Tools · GitHub REST · AgentLoop Recall</p>
               </div>
               <strong>EXECUTE</strong>
             </article>
@@ -785,8 +785,8 @@
             <h2 id="skills-title">把维护经验做成可复用能力</h2>
           </div>
           <p>
-            五个 Apache-2.0 Skill 由统一 Manifest 版本化；十一个强类型 MCP Tool 连接真实
-            GitHub、Agent Step、审批、证据与知识服务，并把验证证明直接发布到 PR。
+            六个 Apache-2.0 Skill 由统一 Manifest 版本化；十四个强类型 MCP Tool 连接真实
+            GitHub、Agent Step、审批、证据与知识服务，并把验证证明和只读审查结果直接发布到 PR。
           </p>
         </div>
 
@@ -817,6 +817,11 @@
               <code>runbook-archival</code>
               <p>查重 · 脱敏 · 经验沉淀</p>
             </article>
+            <article>
+              <span>06</span>
+              <code>pull-request-review</code>
+              <p>固定 Revision · Diff · 托管评论</p>
+            </article>
           </div>
 
           <div class="mcp-orbit reveal" data-delay="120">
@@ -831,7 +836,7 @@
             <span class="orbit-item orbit-item-5">Pull Request</span>
             <span class="orbit-item orbit-item-6">Checks</span>
             <div class="orbit-caption">
-              <span>11 tools</span>
+              <span>14 tools</span>
               <span>typed schema</span>
               <span>versioned skills</span>
             </div>
@@ -917,7 +922,7 @@
         <div class="proof-scoreboard reveal" data-delay="70">
           <div class="proof-score">
             <span>CONTROL PLANE</span>
-            <strong>27/27</strong>
+            <strong>46/46</strong>
             <small>deterministic tests passed</small>
           </div>
           <ol class="proof-dimensions" aria-label="Proof Bundle 五维质量门禁">

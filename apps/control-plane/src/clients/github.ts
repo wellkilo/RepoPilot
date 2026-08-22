@@ -18,6 +18,45 @@ export interface GitHubWorkflowRun {
   htmlUrl: string;
 }
 
+export interface GitHubPullRequest {
+  number: number;
+  title: string;
+  body: string | null;
+  state: string;
+  draft: boolean;
+  htmlUrl: string;
+  baseRef: string;
+  baseSha: string;
+  headRef: string;
+  headSha: string;
+  author: string | null;
+  changedFiles: number;
+  additions: number;
+  deletions: number;
+}
+
+export interface GitHubPullRequestFile {
+  sha: string;
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch: string | null;
+  blobUrl: string;
+}
+
+interface GitHubPullRequestFileResponse {
+  sha: string;
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  blob_url: string;
+}
+
 export interface PullRequestInput {
   owner: string;
   repository: string;
@@ -40,7 +79,7 @@ export interface MergePullRequestInput {
   commitTitle?: string;
 }
 
-export interface ProofCommentResult {
+export interface PullRequestCommentResult {
   id: number;
   htmlUrl: string;
   action: "created" | "updated";
@@ -115,6 +154,80 @@ export class GitHubClient {
       headSha: response.head_sha,
       htmlUrl: response.html_url
     };
+  }
+
+  async getPullRequest(
+    owner: string,
+    repository: string,
+    pullNumber: number
+  ): Promise<GitHubPullRequest> {
+    const response = await this.request<{
+      number: number;
+      title: string;
+      body: string | null;
+      state: string;
+      draft: boolean;
+      html_url: string;
+      base: { ref: string; sha: string };
+      head: { ref: string; sha: string };
+      user: { login: string } | null;
+      changed_files: number;
+      additions: number;
+      deletions: number;
+    }>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/pulls/${pullNumber}`);
+    return {
+      number: response.number,
+      title: response.title,
+      body: response.body,
+      state: response.state,
+      draft: response.draft,
+      htmlUrl: response.html_url,
+      baseRef: response.base.ref,
+      baseSha: response.base.sha,
+      headRef: response.head.ref,
+      headSha: response.head.sha,
+      author: response.user?.login ?? null,
+      changedFiles: response.changed_files,
+      additions: response.additions,
+      deletions: response.deletions
+    };
+  }
+
+  async listPullRequestFiles(
+    owner: string,
+    repository: string,
+    pullNumber: number
+  ): Promise<GitHubPullRequestFile[]> {
+    const files: GitHubPullRequestFile[] = [];
+    for (let page = 1; page <= 30; page += 1) {
+      const response = await this.getPullRequestFilesPage(owner, repository, pullNumber, page);
+      files.push(...response);
+      if (response.length < 100) {
+        break;
+      }
+    }
+    return files;
+  }
+
+  async getPullRequestFilesPage(
+    owner: string,
+    repository: string,
+    pullNumber: number,
+    page: number
+  ): Promise<GitHubPullRequestFile[]> {
+    const response = await this.request<GitHubPullRequestFileResponse[]>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/pulls/${pullNumber}/files?per_page=100&page=${page}`
+    );
+    return response.map((file) => ({
+      sha: file.sha,
+      filename: file.filename,
+      status: file.status,
+      additions: file.additions,
+      deletions: file.deletions,
+      changes: file.changes,
+      patch: file.patch ?? null,
+      blobUrl: file.blob_url
+    }));
   }
 
   async createPullRequest(input: PullRequestInput): Promise<PullRequestResult> {
@@ -198,12 +311,25 @@ export class GitHubClient {
     pullNumber: number,
     marker: string,
     body: string
-  ): Promise<ProofCommentResult> {
-    const comments = await this.request<
-      Array<{ id: number; body: string | null; html_url: string }>
-    >(
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/issues/${pullNumber}/comments?per_page=100`
-    );
+  ): Promise<PullRequestCommentResult> {
+    const comments: Array<{ id: number; body: string | null; html_url: string }> = [];
+    let listingComplete = false;
+    for (let page = 1; page <= 30; page += 1) {
+      const response = await this.request<
+        Array<{ id: number; body: string | null; html_url: string }>
+      >(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/issues/${pullNumber}/comments?per_page=100&page=${page}`
+      );
+      comments.push(...response);
+      if (response.some((comment) => comment.body?.includes(marker))) {
+        listingComplete = true;
+        break;
+      }
+      if (response.length < 100) {
+        listingComplete = true;
+        break;
+      }
+    }
     const existing = comments.find((comment) => comment.body?.includes(marker));
     if (existing) {
       const updated = await this.request<{ id: number; html_url: string }>(
@@ -214,6 +340,11 @@ export class GitHubClient {
         }
       );
       return { id: updated.id, htmlUrl: updated.html_url, action: "updated" };
+    }
+    if (!listingComplete) {
+      throw new Error(
+        `GitHub comment listing exceeded 30 pages for ${owner}/${repository}#${pullNumber}`
+      );
     }
 
     const created = await this.request<{ id: number; html_url: string }>(

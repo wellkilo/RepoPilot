@@ -9,6 +9,7 @@ RepoPilot automatically permits:
 - create a branch and commit;
 - push a non-protected branch;
 - create a Pull Request;
+- create or update the single managed PR Review Comment;
 - read CI and write evidence.
 
 RepoPilot requires human approval for:
@@ -46,6 +47,20 @@ The action itself is recorded as evidence with approval ID and version.
 - REST Run creation;
 - GitHub Webhook;
 - every GitHub MCP tool.
+
+## Pull Request Review Boundary
+
+PR review Runs are identified by the `github_pull_request` source and are restricted to:
+
+- reading the bound PR, changed-file pages, and Checks;
+- appending review evidence;
+- creating or updating the single `<!-- repopilot-review -->` general PR comment.
+
+The control plane rejects repository-mutation tools such as PR creation and merge when the
+calling Run is a PR review Run. Before publishing, it compares the Run head SHA, tool input
+head SHA, and current GitHub PR head SHA. A stale review cannot overwrite the comment for a
+newer revision. Comment upsert is serialized by a PostgreSQL advisory lock to avoid duplicate
+comments during concurrent retries.
 
 ## Webhook Security
 

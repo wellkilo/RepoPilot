@@ -40,4 +40,18 @@ describe("RepoPilot console labels", () => {
       })
     ).toBe("wellkilo/repopilot-testbed · Workflow #42");
   });
+
+  it("renders pull request review sources distinctly", () => {
+    expect(
+      sourceLabel({
+        ...baseRun,
+        source: {
+          type: "github_pull_request",
+          repository: "wellkilo/repopilot-testbed",
+          pullNumber: 7,
+          headSha: "a".repeat(40)
+        }
+      })
+    ).toBe("wellkilo/repopilot-testbed · PR #7");
+  });
 });

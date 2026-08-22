@@ -37,6 +37,7 @@ const evidenceLabels: Record<EvidenceType, string> = {
   ci_result: "CI 结果",
   runbook: "经验沉淀",
   proof_publication: "PR 证明",
+  review_publication: "PR 审查评论",
   error: "错误"
 };
 
@@ -54,13 +55,18 @@ const team: Array<{ code: string; id: AgentName; name: string; duty: string }> =
   { code: "X", id: "repopilot-locator", name: "Locator", duty: "定位根因" },
   { code: "F", id: "repopilot-fixer", name: "Fixer", duty: "生成修复" },
   { code: "V", id: "repopilot-verifier", name: "Verifier", duty: "测试验证" },
-  { code: "A", id: "repopilot-archivist", name: "Archivist", duty: "沉淀经验" }
+  { code: "A", id: "repopilot-archivist", name: "Archivist", duty: "沉淀经验" },
+  { code: "R", id: "repopilot-reviewer", name: "Reviewer", duty: "PR 代码审查" }
 ];
 
 export function sourceLabel(run: RunSummary): string {
-  return run.source.type === "github_issue"
-    ? `${run.source.repository} · Issue #${run.source.issueNumber}`
-    : `${run.source.repository} · Workflow #${run.source.workflowRunId}`;
+  if (run.source.type === "github_issue") {
+    return `${run.source.repository} · Issue #${run.source.issueNumber}`;
+  }
+  if (run.source.type === "github_pull_request") {
+    return `${run.source.repository} · PR #${run.source.pullNumber}`;
+  }
+  return `${run.source.repository} · Workflow #${run.source.workflowRunId}`;
 }
 
 function shortHash(hash: string | null): string {

@@ -56,6 +56,20 @@ Issue 输入：
 }
 ```
 
+Pull Request 审查输入：
+
+```json
+{
+  "source": {
+    "type": "github_pull_request",
+    "repository": "wellkilo/repopilot-testbed",
+    "pullNumber": 7,
+    "headSha": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "executionPolicy": "pull_request_only"
+}
+```
+
 响应：`202 Accepted`
 
 ```json
@@ -182,7 +196,7 @@ Body：
 Headers：
 
 ```text
-X-GitHub-Event: issues | workflow_run
+X-GitHub-Event: issues | workflow_run | pull_request
 X-GitHub-Delivery: <uuid>
 X-Hub-Signature-256: sha256=<hex>
 ```
@@ -192,6 +206,10 @@ X-Hub-Signature-256: sha256=<hex>
 - `issues.opened`
 - `issues.reopened`
 - `workflow_run.completed` 且 `conclusion == failure`
+- 非 Draft 的 `pull_request.opened`
+- 非 Draft 的 `pull_request.reopened`
+- 非 Draft 的 `pull_request.synchronize`
+- `pull_request.ready_for_review`
 
 安全：
 
@@ -243,7 +261,7 @@ Evidence 类型为：
 
 ```text
 input | decision | agent_message | tool_call | tool_result | approval
-| git_reference | ci_result | runbook | proof_publication | error
+| git_reference | ci_result | runbook | proof_publication | review_publication | error
 ```
 
 ### `repopilot_append_evidence`
@@ -335,11 +353,49 @@ PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}
 
 真实调用 GitHub REST `GET /repos/{owner}/{repo}/issues/{issue_number}`。
 
+### `github_get_pull_request`
+
+读取与 PR Review Run 绑定的 Pull Request 元数据：
+
+```json
+{
+  "runId": "uuid",
+  "repository": "wellkilo/repopilot-testbed",
+  "pullNumber": 7
+}
+```
+
+真实调用 `GET /repos/{owner}/{repo}/pulls/{pull_number}`。`runId`、repository 和
+pull number 必须属于同一个 `github_pull_request` Run。
+
+### `github_list_pull_request_files`
+
+分页读取 PR 变更文件和 GitHub 提供的 patch：
+
+```json
+{
+  "runId": "uuid",
+  "repository": "wellkilo/repopilot-testbed",
+  "pullNumber": 7,
+  "page": 1
+}
+```
+
+真实调用：
+
+```text
+GET /repos/{owner}/{repo}/pulls/{pull_number}/files?per_page=100&page={page}
+```
+
+`page` 范围为 `1..30`。响应包含 `files` 与 `hasNextPage`；二进制文件或 GitHub
+未提供文本 diff 时，`patch` 为 `null`。
+
 ### `github_create_pull_request`
 
 真实调用 GitHub REST `POST /repos/{owner}/{repo}/pulls`。
 
 这是默认策略允许的最高自动写权限。
+`github_pull_request` 来源的只读 Review Run 禁止调用该工具。
 
 ### `github_get_pull_request_checks`
 
@@ -349,6 +405,54 @@ PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}
 - GitHub Actions Check Runs。
 
 结果自动写入 `ci_result` evidence。
+
+### `repopilot_publish_review_comment`
+
+为与 Run 绑定的 PR 和不可变 head SHA 发布结构化审查结果：
+
+```json
+{
+  "runId": "uuid",
+  "repository": "wellkilo/repopilot-testbed",
+  "pullNumber": 7,
+  "headSha": "0123456789abcdef0123456789abcdef01234567",
+  "verdict": "needs_attention",
+  "summary": "存在一个会改变有效零值语义的问题。",
+  "findings": [
+    {
+      "severity": "high",
+      "title": "有效零值被当作缺失值",
+      "body": "这里应使用空值合并而不是逻辑或。",
+      "path": "src/score.ts",
+      "line": 18
+    }
+  ]
+}
+```
+
+约束：
+
+- `verdict` 为 `pass | needs_attention | blocked`；
+- `severity` 为 `critical | high | medium | low | info`；
+- 最多 20 条 finding；
+- Run 必须是同仓库、同 PR 的 `github_pull_request` 来源；
+- Run 必须处于 `running`，且存在正在执行的 `pull-request-review` Step；
+- 输入 `headSha` 必须同时匹配 Run 和 GitHub 当前 PR head；
+- head 已变化时拒绝发布旧审查，等待新的 `synchronize` Run；
+- 固定使用 `<!-- repopilot-review -->`，首次创建、后续更新同一条普通 PR 评论；
+- 仅发布普通 conversation comment，不 approve、不 request changes、不发 inline review、
+  不修改代码、不合并；
+- 成功发布后追加 `review_publication` Evidence；Reviewer Step 没有该 Evidence 时不能
+  以 `succeeded` 结束。
+
+真实调用：
+
+```text
+GET   /repos/{owner}/{repo}/pulls/{pull_number}
+GET   /repos/{owner}/{repo}/issues/{pull_number}/comments?per_page=100&page={page}
+POST  /repos/{owner}/{repo}/issues/{pull_number}/comments
+PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}
+```
 
 ### `github_merge_pull_request`
 
@@ -371,6 +475,7 @@ PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}
 - `consumedAt == null`
 
 成功消费后不能再次调用。
+`github_pull_request` 来源的只读 Review Run 即使持有审批也禁止调用合并工具。
 
 ## 错误结构
 

@@ -25,10 +25,12 @@ type DatabaseSql = Sql<Record<string, postgres.PostgresType>>;
 
 interface RunRow {
   id: string;
-  source_type: "github_issue" | "github_workflow_run";
+  source_type: "github_issue" | "github_workflow_run" | "github_pull_request";
   repository: string;
   issue_number: string | number | null;
   workflow_run_id: string | number | null;
+  pull_number: string | number | null;
+  head_sha: string | null;
   execution_policy: "pull_request_only";
   status: RunStatus;
   trace_id: string;
@@ -124,12 +126,23 @@ export class RepoPilotStore {
     await this.sql`SELECT 1`;
   }
 
+  async withAdvisoryLock<T>(key: string, operation: () => Promise<T>): Promise<T> {
+    let result!: T;
+    await this.sql.begin(async (transaction) => {
+      await transaction`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+      result = await operation();
+    });
+    return result;
+  }
+
   async createRun(input: CreateRunInput, options: CreateRunOptions = {}): Promise<CreatedRun> {
     const id = randomUUID();
     const traceId = randomBytes(16).toString("hex");
     const issueNumber = input.source.type === "github_issue" ? input.source.issueNumber : null;
     const workflowRunId =
       input.source.type === "github_workflow_run" ? input.source.workflowRunId : null;
+    const pullNumber = input.source.type === "github_pull_request" ? input.source.pullNumber : null;
+    const headSha = input.source.type === "github_pull_request" ? input.source.headSha : null;
     const deliveryId = options.deliveryId;
     const rows = deliveryId
       ? await this.sql.begin(async (transaction) => {
@@ -150,6 +163,8 @@ export class RepoPilotStore {
               repository,
               issue_number,
               workflow_run_id,
+              pull_number,
+              head_sha,
               delivery_id,
               execution_policy,
               trace_id
@@ -160,6 +175,8 @@ export class RepoPilotStore {
               ${input.source.repository.toLowerCase()},
               ${issueNumber},
               ${workflowRunId},
+              ${pullNumber},
+              ${headSha},
               ${deliveryId},
               ${input.executionPolicy},
               ${traceId}
@@ -175,6 +192,8 @@ export class RepoPilotStore {
             repository,
             issue_number,
             workflow_run_id,
+            pull_number,
+            head_sha,
             delivery_id,
             execution_policy,
             trace_id
@@ -185,6 +204,8 @@ export class RepoPilotStore {
             ${input.source.repository.toLowerCase()},
             ${issueNumber},
             ${workflowRunId},
+            ${pullNumber},
+            ${headSha},
             NULL,
             ${input.executionPolicy},
             ${traceId}
@@ -396,6 +417,16 @@ export class RepoPilotStore {
       ORDER BY created_at ASC, id ASC
     `;
     return rows.map((row) => this.mapStep(row));
+  }
+
+  async getStep(stepId: string): Promise<StepRecord | null> {
+    const rows = await this.sql<StepRow[]>`
+      SELECT *
+      FROM steps
+      WHERE id = ${stepId}
+      LIMIT 1
+    `;
+    return rows[0] ? this.mapStep(rows[0]) : null;
   }
 
   async appendEvidence(input: AppendEvidenceInput): Promise<EvidenceRecord> {
@@ -755,6 +786,14 @@ export class RepoPilotStore {
         type: "github_issue",
         repository: row.repository,
         issueNumber: Number(row.issue_number)
+      };
+    }
+    if (row.source_type === "github_pull_request") {
+      return {
+        type: "github_pull_request",
+        repository: row.repository,
+        pullNumber: Number(row.pull_number),
+        headSha: this.requireRow(row.head_sha ?? undefined, "Pull request Run is missing head_sha")
       };
     }
     return {
