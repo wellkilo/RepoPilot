@@ -56,7 +56,7 @@ API Key: ollama
 Model: qwen3
 ```
 
-The exact local model must support the AgentTeams runtime requirements; use a hosted model for a reliable competition demo if local resources are insufficient.
+The exact local model must support the AgentTeams runtime requirements. Use a hosted model when local resources cannot provide stable tool use and context capacity.
 
 Then render:
 

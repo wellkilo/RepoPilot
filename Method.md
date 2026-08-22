@@ -281,7 +281,7 @@ AgentTeams Archivist
 ```
 
 评论以 `runId` 派生的 HTML marker 定位；已存在时使用 `PATCH` 更新，否则使用 `POST`
-创建。评论不包含原始 Evidence payload、工具输出或仓库私有内容，只发布评分、
+创建。评论不包含原始 Evidence payload、工具输出或仓库私有内容，只发布完整性得分、
 Agent/Skill 结果、证据数量和链根，并附带等价的机器可解析 JSON 摘要。Run 未进入
 终态、仓库不匹配或目标 PR 未记录在该 Run 的证据中时拒绝发布。
 

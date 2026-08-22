@@ -54,7 +54,7 @@
     <a href="API.md">API / MCP</a> ·
     <a href="docs/security.md">安全</a> ·
     <a href="docs/demo.md">Demo</a> ·
-    <a href="competition/initial-submission.md">参赛材料</a>
+    <a href="CONTRIBUTING.md">参与贡献</a>
   </p>
   <br />
 </div>
@@ -69,9 +69,8 @@
 </table>
 
 > RepoPilot 建立在 [AgentTeams](https://github.com/agentscope-ai/AgentTeams) `v1.2.2`
-> 之上，面向 GOAI「新智基座 · Agent Infra」赛道设计。默认策略为
-> `pull_request_only`：Agent 可以创建分支、提交和 Pull Request，但不能自动合并、
-> 删除分支、修改权限或密钥。
+> 之上，专注于安全、可审计的仓库维护自动化。默认策略为 `pull_request_only`：
+> Agent 可以创建分支、提交和 Pull Request，但不能自动合并、删除分支、修改权限或密钥。
 
 ## 两条自动化闭环
 
@@ -161,7 +160,7 @@ PR 审查链路监听 `opened`、`reopened`、`synchronize` 与
 | HIGH     | GitHub 写入失败仍记录“已发布” Evidence | `src/reviews/publisher.ts:31`     |
 ```
 
-这不是示例文案。公开的
+以下结果来自公开的
 <a href="https://github.com/wellkilo/repopilot-testbed/pull/5">PR #5</a>
 包含 5 个文件、373 行新增，GitHub Actions
 <a href="https://github.com/wellkilo/repopilot-testbed/actions/runs/32557838055">CI 已通过</a>；
@@ -207,7 +206,7 @@ PostgreSQL 追加式 SHA-256 证据链，并通过 OpenTelemetry Trace 与证据
 
 ## Proof-Carrying Pull Request
 
-RepoPilot 的差异化不只是“自动生成 PR”，而是让每个 PR 携带一份机器可核验的
+RepoPilot 不把“自动生成 PR”作为终点，而是让每个 PR 携带一份机器可核验的
 **Proof Bundle**：
 
 ```text
@@ -227,8 +226,8 @@ Proof Score 衡量证明完整性，不把控制面测试冒充模型修复质�
 测试床、独立 Verifier 与 GitHub Checks 判定。
 
 完成 Runbook 归档后，Archivist 调用 `repopilot_publish_proof_comment`，将脱敏后的
-评分、Agent/Skill 执行结果和 SHA-256 链根幂等发布到对应 PR。重复执行会更新同一条
-评论，因此 Proof 真正随 PR 交付，而不是只存在于控制面 API。
+完整性结果、Agent/Skill 执行结果和 SHA-256 链根幂等发布到对应 PR。重复执行会更新
+同一条评论，因此 Proof 真正随 PR 交付，而不是只存在于控制面 API。
 
 ## 为什么是 RepoPilot
 
@@ -390,10 +389,10 @@ RepoPilot/
 ├── packages/contracts/      # Zod Schema、共享类型和显式状态机
 ├── deploy/agentteams/       # AgentTeams v1.2.2 Worker / Team 清单
 ├── skills/                  # 6 个可复用 RepoPilot Skills
-├── evaluation/              # Proof Bundle 协议与复赛 Benchmark
+├── evaluation/              # Proof Bundle 协议与可靠性 Benchmark
 ├── scripts/                 # Skill 校验、可靠性基线与离线评测
-├── competition/             # 初赛简介、评审映射和提交清单
 ├── docs/                    # 架构、安全、部署和 Demo 文档
+├── CONTRIBUTING.md          # 开发流程、质量门禁与贡献规范
 ├── API.md                   # REST / Webhook / MCP 出入参
 ├── Method.md                # 外部 SDK、HTTP Method 与调用契约
 └── docker-compose.yml       # PostgreSQL 16 + pgvector
@@ -533,7 +532,7 @@ pnpm build
 
 当前控制面可靠性基线为 `46/46`。测试覆盖状态机、Webhook 验签、证据哈希、数据库
 不可变触发器、delivery 并发幂等、审批版本与一次性消费、Agent Skill Step 生命周期、
-Proof Bundle 评分、PR Review 来源与 stale SHA 防护、HTTP 冲突语义及控制台标签。
+Proof Bundle 完整性校验、PR Review 来源与 stale SHA 防护、HTTP 冲突语义及控制台标签。
 CI 生成结构化 JSON 报告。
 
 ## 安全边界
@@ -558,17 +557,17 @@ CI 生成结构化 JSON 报告。
 
 ## 文档导航
 
-| 文档                                                         | 内容                                                    |
-| ------------------------------------------------------------ | ------------------------------------------------------- |
-| [`API.md`](API.md)                                           | REST、Webhook 和 MCP Schema                             |
-| [`Method.md`](Method.md)                                     | AgentTeams、Matrix、GitHub、PostgreSQL 和 OTel 方法契约 |
-| [`docs/architecture.md`](docs/architecture.md)               | 架构、状态机和部署剖面                                  |
-| [`docs/security.md`](docs/security.md)                       | 权限、审批、凭证和 evidence 完整性                      |
-| [`docs/deployment.md`](docs/deployment.md)                   | 本地、AgentTeams、Webhook 和可观测部署                  |
-| [`docs/demo.md`](docs/demo.md)                               | 比赛 Demo 流程与失败分支                                |
-| [`evaluation/README.md`](evaluation/README.md)               | 评测分层、Proof Bundle 和复赛 Benchmark                 |
-| [`docs/semifinal-readiness.md`](docs/semifinal-readiness.md) | 复赛要求、评分差距和工程优先级                          |
-| [`competition/`](competition/)                               | 初赛简介、评审映射和提交清单                            |
+| 文档                                           | 内容                                                    |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| [`API.md`](API.md)                             | REST、Webhook 和 MCP Schema                             |
+| [`Method.md`](Method.md)                       | AgentTeams、Matrix、GitHub、PostgreSQL 和 OTel 方法契约 |
+| [`docs/architecture.md`](docs/architecture.md) | 架构、状态机和部署剖面                                  |
+| [`docs/security.md`](docs/security.md)         | 权限、审批、凭证和 evidence 完整性                      |
+| [`docs/deployment.md`](docs/deployment.md)     | 本地、AgentTeams、Webhook 和可观测部署                  |
+| [`docs/demo.md`](docs/demo.md)                 | 公开复现流程、运行证据与失败分支                        |
+| [`evaluation/README.md`](evaluation/README.md) | 可靠性分层、Proof Bundle 和 Benchmark                   |
+| [`docs/roadmap.md`](docs/roadmap.md)           | 工程路线图与待完善能力                                  |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)           | 开发环境、质量门禁和贡献流程                            |
 
 ## 当前边界
 

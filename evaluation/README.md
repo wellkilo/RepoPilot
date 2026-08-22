@@ -1,11 +1,11 @@
 # RepoPilot Evaluation Harness
 
-复赛评测分为两层，避免把确定性控制面测试误写成模型能力：
+RepoPilot 的验证分为两层，避免把确定性控制面测试误写成模型能力：
 
 1. **Control-plane reliability**：不需要模型凭证，CI 自动验证幂等、状态机、Evidence
-   完整性、审批门禁、Step 生命周期和 Proof Bundle 评分器。
+   完整性、审批门禁、Step 生命周期和 Proof Bundle 完整性校验器。
 2. **AgentTeam task quality**：需要真实 AgentTeams、模型、GitHub 与测试床。每个真实
-   Run 导出 Proof Bundle，再由同一确定性评分器离线复核。
+   Run 导出 Proof Bundle，再由同一确定性校验器离线复核。
 
 ## Proof Bundle
 
@@ -24,10 +24,10 @@ pnpm evaluate artifacts/proof-bundle.json artifacts/evaluation-report.json
 ```
 
 在真实 AgentTeams Run 中，Archivist 最后调用
-`repopilot_publish_proof_comment`，把脱敏评分和哈希链根幂等发布到目标 PR，形成
-可由代码评审者直接看到的 Proof-Carrying PR。
+`repopilot_publish_proof_comment`，把脱敏完整性结果和哈希链根幂等发布到目标 PR，形成
+可由代码审查者直接看到的 Proof-Carrying PR。
 
-评分总分 100：
+完整性得分总分 100：
 
 | 维度       | 分值 | 机器检查                                |
 | ---------- | ---: | --------------------------------------- |
@@ -40,7 +40,7 @@ pnpm evaluate artifacts/proof-bundle.json artifacts/evaluation-report.json
 该分数衡量“证明是否完整”，不宣称衡量代码修复的语义质量。代码修复质量仍由
 测试床的 acceptance criteria、独立 Verifier 和 GitHub Checks 判定。
 
-## 复赛 Benchmark 场景
+## Benchmark 场景
 
 真实 benchmark 采用公开 `wellkilo/repopilot-testbed`，每个 Case 必须保留 Issue、
 失败基线、修复 PR、绿色 CI 与 Proof Bundle：
@@ -53,10 +53,10 @@ pnpm evaluate artifacts/proof-bundle.json artifacts/evaluation-report.json
 | `approval-rejection`     | 安全边界               | 拒绝后 Run 取消；高风险动作未执行                     |
 | `webhook-replay`         | 输入防重放             | 并发重复 webhook 只创建一个 Run 和一条 input evidence |
 
-`duplicate-webhook-race` 已有公开 Issue #3、PR #4 和 GitHub Actions 证据。其余场景需要
-在复赛真实运行中逐项生成证据，不在仓库中伪造结果。
+`duplicate-webhook-race` 已有公开 Issue #3、PR #4 和 GitHub Actions 证据。其余场景
+列入公开路线图，完成真实运行并生成可核验证据后再标记为可用，不在仓库中伪造结果。
 
-## 统计指标
+## 运行指标
 
 - 完整闭环成功率；
 - 首次根因定位耗时；

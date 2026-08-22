@@ -24,7 +24,7 @@ flowchart LR
 
 ## AgentTeams Mapping
 
-| Competition requirement | AgentTeams mechanism                         | RepoPilot implementation                       |
+| Repository capability   | AgentTeams mechanism                         | RepoPilot implementation                       |
 | ----------------------- | -------------------------------------------- | ---------------------------------------------- |
 | Role orchestration      | Worker + Team CRD                            | six Worker resources                           |
 | Task decomposition      | Team Leader project/task management          | Repo Lead + repository-triage                  |
@@ -77,7 +77,7 @@ PR webhook 走独立的 `github_pull_request` Run。Reviewer 固化并复核 hea
 - AgentTeams optional.
 - No model secret required.
 
-### Demo / competition
+### Self-hosted AgentTeam
 
 - AgentTeams v1.2.2 local Docker or Kubernetes.
 - RepoPilot MCP behind Higress.

@@ -2,7 +2,7 @@
 
 ## Mission
 
-RepoPilot is an open-source, auditable repository-maintenance AgentTeam for the GOAI Agent Infra track. It must demonstrate a real end-to-end loop:
+RepoPilot is an open-source, auditable repository-maintenance AgentTeam. It must maintain a real end-to-end loop:
 
 `GitHub event -> AgentTeams orchestration -> analysis -> patch -> pull request -> CI verification -> approval/audit -> runbook`
 
@@ -22,7 +22,7 @@ RepoPilot is an open-source, auditable repository-maintenance AgentTeam for the 
 - `packages/contracts`: shared Zod schemas and TypeScript types.
 - `deploy/agentteams`: AgentTeams Worker and Team resources.
 - `skills`: reusable RepoPilot Agent Skills, plus installation metadata for official Alibaba Cloud Skills.
-- `docs`: API, method, competition, architecture, security, and operational documentation.
+- `docs`: API, method, architecture, security, roadmap, and operational documentation.
 - `testbed`: source template for the intentionally defective public/private demo repository.
 
 ## Development Flow

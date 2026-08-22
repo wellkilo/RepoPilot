@@ -352,7 +352,7 @@ export function App() {
               </section>
 
               {proof ? (
-                <section className="proof-panel" aria-label="运行证明评分">
+                <section className="proof-panel" aria-label="运行证明完整性">
                   <div className="section-heading">
                     <div>
                       <p className="eyebrow">Proof-carrying pull request</p>

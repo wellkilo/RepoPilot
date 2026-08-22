@@ -3010,14 +3010,17 @@ code {
   }
 
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-copy {
+    min-width: 0;
     max-width: 900px;
   }
 
   .flight-recorder {
+    min-width: 0;
+    width: 100%;
     max-width: 820px;
   }
 

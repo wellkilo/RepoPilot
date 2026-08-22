@@ -4,6 +4,22 @@
   "private": true,
   "description": "Auditable repository maintenance AgentTeam built on AgentTeams.",
   "license": "Apache-2.0",
+  "homepage": "https://wellkilo.github.io/RepoPilot/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wellkilo/RepoPilot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wellkilo/RepoPilot/issues"
+  },
+  "keywords": [
+    "agentteams",
+    "github-automation",
+    "mcp",
+    "multi-agent",
+    "opentelemetry",
+    "repository-maintenance"
+  ],
   "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=20"
